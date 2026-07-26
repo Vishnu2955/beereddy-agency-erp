@@ -25,6 +25,13 @@ const orderService = {
       .put(`/orders/${id}`, data)
       .then((res) => res.data);
   },
+  updateOrderStatus(id, orderStatus) {
+  return api
+    .put(`/orders/${id}/status`, {
+      orderStatus,
+    })
+    .then((res) => res.data);
+},
 
   deleteOrder(id) {
     return api

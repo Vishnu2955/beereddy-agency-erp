@@ -2,14 +2,17 @@ import {
   FaEdit,
   FaTrash,
   FaBoxOpen,
+  FaShoppingCart,
 } from "react-icons/fa";
 
 const IMAGE_URL = "http://localhost:5000/uploads/products/";
-
+const user = JSON.parse(localStorage.getItem("user"));
+const role = user?.role || "";
 export default function ProductTable({
   products,
   onEdit,
   onDelete,
+  onAddToCart,
 }) {
   if (!products.length) {
     return (
@@ -185,25 +188,35 @@ export default function ProductTable({
 
                   <div className="flex justify-center gap-3">
 
-                    <button
-                      onClick={() => onEdit(product)}
-                      className="bg-blue-100 hover:bg-blue-600 hover:text-white transition w-10 h-10 rounded-full flex items-center justify-center"
-                    >
+  {role === "admin" && (
+    <>
+      <button
+        onClick={() => onEdit(product)}
+        className="bg-blue-100 hover:bg-blue-600 hover:text-white transition w-10 h-10 rounded-full flex items-center justify-center"
+      >
+        <FaEdit />
+      </button>
 
-                      <FaEdit />
+      <button
+        onClick={() => onDelete(product)}
+        className="bg-red-100 hover:bg-red-600 hover:text-white transition w-10 h-10 rounded-full flex items-center justify-center"
+      >
+        <FaTrash />
+      </button>
+    </>
+  )}
 
-                    </button>
+  {role === "retailer" && (
+    <button
+      onClick={() => onAddToCart(product)}
+      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+    >
+      <FaShoppingCart />
+      Add to Cart
+    </button>
+  )}
 
-                    <button
-                      onClick={() => onDelete(product)}
-                      className="bg-red-100 hover:bg-red-600 hover:text-white transition w-10 h-10 rounded-full flex items-center justify-center"
-                    >
-
-                      <FaTrash />
-
-                    </button>
-
-                  </div>
+</div>
 
                 </td>
 

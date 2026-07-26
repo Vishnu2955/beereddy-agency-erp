@@ -9,18 +9,41 @@ const {
   getSummary,
 } = require("../controllers/reportController");
 
-const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
+const {
+  verifyToken,
+  isAdmin,
+} = require("../middleware/authMiddleware");
+
+// Summary
+router.get(
+  "/",
+  verifyToken,
+  isAdmin,
+  getSummary
+);
 
 // Sales Report
-router.get("/sales", verifyToken, isAdmin, getSalesReport);
+router.get(
+  "/sales",
+  verifyToken,
+  isAdmin,
+  getSalesReport
+);
 
 // Stock Report
-router.get("/stock", verifyToken, isAdmin, getStockReport);
+router.get(
+  "/stock",
+  verifyToken,
+  isAdmin,
+  getStockReport
+);
 
-// Retailer Purchase Report
-router.get("/retailer-sales", verifyToken, isAdmin, getRetailerSales);
-
-// Summary Report
-router.get("/summary", verifyToken, isAdmin, getSummary);
+// Retailer Report
+router.get(
+  "/retailers",
+  verifyToken,
+  isAdmin,
+  getRetailerSales
+);
 
 module.exports = router;

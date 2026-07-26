@@ -8,6 +8,7 @@ const {
   getAllOrders,
   getSingleOrder,
   updateOrderStatus,
+  updatePaymentStatus,
   cancelOrder,
   deleteOrder,
   searchOrders,
@@ -15,9 +16,9 @@ const {
 
 const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
 
-// ====================================
+// =====================================================
 // Retailer Routes
-// ====================================
+// =====================================================
 
 // Place Order
 router.post("/", verifyToken, createOrder);
@@ -25,9 +26,9 @@ router.post("/", verifyToken, createOrder);
 // My Orders
 router.get("/my-orders", verifyToken, getMyOrders);
 
-// ====================================
+// =====================================================
 // Admin Routes
-// ====================================
+// =====================================================
 
 // View All Orders
 router.get("/", verifyToken, isAdmin, getAllOrders);
@@ -40,6 +41,14 @@ router.get("/:id", verifyToken, isAdmin, getSingleOrder);
 
 // Update Order Status
 router.put("/:id/status", verifyToken, isAdmin, updateOrderStatus);
+
+// Update Payment Status
+router.put(
+  "/:id/payment-status",
+  verifyToken,
+  isAdmin,
+  updatePaymentStatus
+);
 
 // Cancel Order
 router.put("/:id/cancel", verifyToken, isAdmin, cancelOrder);

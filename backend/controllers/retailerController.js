@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const Order = require("../models/Order");
+const Payment = require("../models/Payment");
 
 // =======================================================
 // Add Retailer
@@ -10,8 +12,8 @@ const addRetailer = async (req, res) => {
       fullName,
       shopName,
       phone,
-      email,
       password,
+      email,
       address,
       gstNumber,
       creditLimit,
@@ -91,20 +93,55 @@ const addRetailer = async (req, res) => {
   }
 };
 
-// =======================================================
-// Get All Retailers
-// =======================================================
 const getAllRetailers = async (req, res) => {
   try {
     const retailers = await User.find({ role: "retailer" })
       .select("-password")
       .sort({ createdAt: -1 });
 
+    const retailerData = await Promise.all(
+      retailers.map(async (retailer) => {
+
+        const orders = await Order.find({
+          retailer: retailer._id,
+          orderStatus: { $ne: "Cancelled" },
+        });
+
+        const totalOrders = orders.reduce(
+          (sum, order) => sum + Number(order.finalAmount || 0),
+          0
+        );
+
+        const payments = await Payment.find({
+          retailer: retailer._id,
+          status: "Approved",
+        });
+
+        const totalPayments = payments.reduce(
+          (sum, payment) => sum + Number(payment.amount || 0),
+          0
+        );
+
+        const outstanding = totalOrders - totalPayments;
+
+        return {
+          ...retailer.toObject(),
+          totalOrders,
+          totalPayments,
+          outstanding,
+          availableCredit:
+            Number(retailer.creditLimit || 0) - outstanding,
+        };
+      })
+    );
+
     res.status(200).json({
       success: true,
-      totalRetailers: retailers.length,
-      retailers,
+      totalRetailers: retailerData.length,
+      retailers: retailerData,
+      totalPages: 1,
     });
+
   } catch (error) {
     console.error(error);
 

@@ -265,10 +265,11 @@ export default function Products() {
 
       {!loading && products.length > 0 && (
         <ProductTable
-          products={products}
-          onEdit={handleEdit}
-          onDelete={handleDeleteClick}
-        />
+  products={products}
+  onEdit={handleEdit}
+  onDelete={handleDeleteClick}
+  onAddToCart={handleAddToCart}
+/>
       )}
 
       {/* Pagination */}
@@ -309,5 +310,36 @@ export default function Products() {
 
     </div>
   );
+//-----------------------------------------
+// Add To Cart
+//-----------------------------------------
 
+const handleAddToCart = (product) => {
+
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+  const existing = cart.find(
+    (item) => item._id === product._id
+  );
+
+  if (existing) {
+
+    existing.quantity += 1;
+
+  } else {
+
+    cart.push({
+      ...product,
+      quantity: 1,
+    });
+
+  }
+
+  localStorage.setItem(
+    "cart",
+    JSON.stringify(cart)
+  );
+
+  successToast("Product added to cart.");
+};
 }

@@ -1,5 +1,7 @@
-const express = require("express");
 const dotenv = require("dotenv");
+dotenv.config();
+const express = require("express");
+
 const cors = require("cors");
 
 // Database
@@ -14,8 +16,12 @@ const orderRoutes = require("./routes/orderRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const invoiceRoutes = require("./routes/invoiceRoutes");
-dotenv.config();
+const paymentRoutes = require("./routes/paymentRoutes");
+const outstandingRoutes = require("./routes/outstandingRoutes");
+const inventoryRoutes = require("./routes/inventoryRoutes");
 
+console.log("EMAIL_USER =", process.env.EMAIL_USER);
+console.log("EMAIL_PASS loaded =", !!process.env.EMAIL_PASS);
 // Connect Database
 connectDB();
 
@@ -37,6 +43,10 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/invoices", invoiceRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/outstanding", outstandingRoutes);
+app.use("/api/inventory", inventoryRoutes);
+
 // Home Route
 app.get("/", (req, res) => {
   res.json({

@@ -49,8 +49,8 @@ export default function LowStockTable() {
                 key={product._id}
                 className="border-b"
               >
-                <td className="py-3">
-                  {product.name}
+                <td className="py-3 font-medium">
+                  {product.productName|| product.name}
                 </td>
 
                 <td>

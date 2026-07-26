@@ -6,16 +6,17 @@ export default function RetailerForm({
   loading,
 }) {
   const [form, setForm] = useState({
-    fullName: "",
-    shopName: "",
-    phone: "",
-    email: "",
-    address: "",
-    gstNumber: "",
-    creditLimit: 0,
-    outstandingBalance: 0,
-    isActive: true,
-  });
+  fullName: "",
+  shopName: "",
+  phone: "",
+  email: "",
+  password: "",
+  address: "",
+  gstNumber: "",
+  creditLimit: 0,
+  outstandingBalance: 0,
+  isActive: true,
+});
 
   useEffect(() => {
     if (initialData) {
@@ -24,6 +25,7 @@ export default function RetailerForm({
         shopName: initialData.shopName || "",
         phone: initialData.phone || "",
         email: initialData.email || "",
+        password: "",
         address: initialData.address || "",
         gstNumber: initialData.gstNumber || "",
         creditLimit: initialData.creditLimit || 0,
@@ -120,7 +122,20 @@ export default function RetailerForm({
         </div>
 
       </div>
+      <div>
+        <label className="block mb-1 font-medium">
+          Password
+       </label>
 
+       <input
+         type="password"
+         name="password"
+         value={form.password}
+         onChange={handleChange}
+         required={!initialData}
+         className="w-full border rounded-lg px-4 py-2"
+         />
+        </div>
       <div>
         <label className="block mb-1 font-medium">
           Address

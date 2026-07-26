@@ -26,8 +26,17 @@ function Login() {
 
       console.log("User from API:");
       console.log(res.data.user);
+// Save token and user
+saveAuth(res.data.token, res.data.user);
 
-      saveAuth(res.data.token, res.data.user);
+console.log("========== AFTER SAVING ==========");
+
+console.log("Stored Token:");
+console.log(localStorage.getItem("token"));
+
+console.log("Stored User:");
+console.log(localStorage.getItem("user"));
+      
 
       console.log("========== AFTER SAVING ==========");
 
@@ -61,7 +70,7 @@ function Login() {
         <input
           type="text"
           placeholder="Email or Phone"
-          className="border w-full p-3 rounded mb-4 outline-none focus:ring-2 focus:ring-blue-500"
+         className="border w-full p-3 rounded mb-2 outline-none focus:ring-2 focus:ring-blue-500"
           value={login}
           onChange={(e) => setLogin(e.target.value)}
           required
@@ -75,6 +84,15 @@ function Login() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        <div className="flex justify-end mb-4">
+  <button
+    type="button"
+    onClick={() => navigate("/forgot-password")}
+    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+  >
+    Forgot Password?
+  </button>
+</div>
 
         <button
           type="submit"

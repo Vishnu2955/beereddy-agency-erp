@@ -106,7 +106,7 @@ export default function RetailerTable({
                 </td>
 
                 <td className="px-5 py-4 text-right font-semibold text-red-600">
-                  ₹{Number(retailer.outstandingBalance || 0).toLocaleString("en-IN")}
+                ₹{Number(retailer.outstanding || 0).toLocaleString("en-IN")}
                 </td>
 
                 <td className="px-5 py-4 text-center">

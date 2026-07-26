@@ -30,9 +30,10 @@ const productSchema = new mongoose.Schema(
 
     barcode: {
       type: String,
+      default: null,
       unique: true,
       sparse: true,
-      trim: true,
+      
     },
 
     purchasePrice: {

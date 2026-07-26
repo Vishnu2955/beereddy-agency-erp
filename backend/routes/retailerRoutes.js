@@ -21,7 +21,7 @@ const {
 // ======================================================
 
 // Add Retailer
-router.post("/add", verifyToken, isAdmin, addRetailer);
+router.post("/", verifyToken, isAdmin, addRetailer);
 
 // Get All Retailers
 router.get("/", verifyToken, isAdmin, getAllRetailers);

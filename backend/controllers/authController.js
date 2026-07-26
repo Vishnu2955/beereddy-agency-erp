@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const sendEmail = require("../utils/sendEmail");
 
 // ==============================
 // Register User
@@ -187,8 +188,174 @@ const loginUser = async (req, res) => {
     });
   }
 };
+// ==============================
+// Send Email OTP
+// ==============================
+const sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
 
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Email is not registered",
+      });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+
+    await user.save();
+
+    await sendEmail(
+      user.email,
+      "Beereddy ERP - Password Reset OTP",
+      `
+      <div style="font-family:Arial,sans-serif">
+        <h2>Beereddy ERP</h2>
+
+        <p>Your password reset OTP is:</p>
+
+        <h1 style="letter-spacing:4px;color:#2563eb;">
+          ${otp}
+        </h1>
+
+        <p>This OTP is valid for <b>5 minutes</b>.</p>
+
+        <p>If you didn't request this, you can ignore this email.</p>
+      </div>
+      `
+    );
+
+    res.json({
+      success: true,
+      message: "OTP sent successfully",
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+// ==============================
+// Verify OTP
+// ==============================
+const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+    });
+
+    console.log("Entered OTP:", JSON.stringify(otp));
+    console.log("Stored OTP :", JSON.stringify(user.otp));
+    console.log("Entered Type:", typeof otp);
+    console.log("Stored Type :", typeof user.otp);
+
+    console.log("Entered OTP:", JSON.stringify(otp));
+console.log("Stored OTP :", JSON.stringify(user.otp));
+console.log("Entered Type:", typeof otp);
+console.log("Stored Type :", typeof user.otp);
+
+if (!user.otp || String(user.otp).trim() !== String(otp).trim()) {
+  return res.status(400).json({
+    success: false,
+    message: "Invalid OTP",
+  });
+}
+
+    if (user.otpExpires < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired",
+      });
+    }
+
+    if (user.otpExpires < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "OTP verified successfully",
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+// ==============================
+// Reset Password
+// ==============================
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, password } = req.body;
+
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    if (user.otpExpires < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user.password = hashedPassword;
+    user.otp = null;
+    user.otpExpires = null;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Password changed successfully",
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 module.exports = {
   registerUser,
   loginUser,
+  sendOtp,
+  verifyOtp,
+  resetPassword,
 };

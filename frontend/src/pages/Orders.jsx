@@ -161,16 +161,16 @@ export default function Orders() {
 
       if (selectedOrder) {
 
-        await orderService.updateOrder(
-          selectedOrder._id,
-          formData
-        );
+  await orderService.updateOrderStatus(
+    selectedOrder._id,
+    formData.orderStatus
+  );
 
-        successToast(
-          "Order updated successfully."
-        );
+  successToast(
+    "Order status updated successfully."
+  );
 
-      } else {
+} else {
 
         await orderService.createOrder(
           formData

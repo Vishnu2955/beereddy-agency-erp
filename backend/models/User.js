@@ -50,14 +50,24 @@ const userSchema = new mongoose.Schema(
     },
 
     creditLimit: {
-      type: Number,
-      default: 0,
-    },
+  type: Number,
+  default: 0,
+},
 
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+isActive: {
+  type: Boolean,
+  default: true,
+},
+
+otp: {
+  type: String,
+  default: null,
+},
+
+otpExpires: {
+  type: Date,
+  default: null,
+},
   },
   {
     timestamps: true,
