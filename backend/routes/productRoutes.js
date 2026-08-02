@@ -20,10 +20,16 @@ const {
 const upload = require("../middleware/uploadMiddleware");
 
 // ======================================================
-// Product Routes (Admin Only)
+// Product Routes
 // ======================================================
 
-// Add Product
+// Get All Products (Authenticated Users: Admin & Retailer)
+router.get("/", verifyToken, getAllProducts);
+
+// Get Single Product (Authenticated Users: Admin & Retailer)
+router.get("/:id", verifyToken, getProductById);
+
+// Add Product (Admin Only)
 router.post(
   "/",
   verifyToken,
@@ -32,13 +38,7 @@ router.post(
   addProduct
 );
 
-// Get All Products
-router.get("/", verifyToken, isAdmin, getAllProducts);
-
-// Get Single Product
-router.get("/:id", verifyToken, isAdmin, getProductById);
-
-// Update Product
+// Update Product (Admin Only)
 router.put(
   "/:id",
   verifyToken,
@@ -47,7 +47,7 @@ router.put(
   updateProduct
 );
 
-// Delete Product
+// Delete Product (Admin Only)
 router.delete("/:id", verifyToken, isAdmin, deleteProduct);
 
 module.exports = router;

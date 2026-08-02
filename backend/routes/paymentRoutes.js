@@ -27,12 +27,11 @@ router.post(
 );
 
 // =====================================
-// Get All Payments (Admin)
+// Get Payments
 // =====================================
 router.get(
   "/",
   verifyToken,
-  isAdmin,
   getAllPayments
 );
 

@@ -6,13 +6,11 @@ export default function ProductBasicInfo({
 }) {
   return (
     <div className="bg-white rounded-lg shadow p-6">
-
       <h2 className="text-xl font-bold mb-6">
         Product Information
       </h2>
 
       <div className="grid md:grid-cols-2 gap-5">
-
         <div>
           <label className="block mb-2 font-medium">
             Product Name *
@@ -31,7 +29,7 @@ export default function ProductBasicInfo({
 
         <div>
           <label className="block mb-2 font-medium">
-            Brand
+            Brand *
           </label>
 
           <input
@@ -40,7 +38,8 @@ export default function ProductBasicInfo({
             value={formData.brand}
             onChange={handleChange}
             className="w-full border rounded-lg p-3"
-            placeholder="Brand"
+            placeholder="Brand (e.g. V-Bond)"
+            required
           />
         </div>
 
@@ -55,14 +54,14 @@ export default function ProductBasicInfo({
             value={formData.category}
             onChange={handleChange}
             className="w-full border rounded-lg p-3"
-            placeholder="Category"
+            placeholder="Category (e.g. Tile Adhesives)"
             required
           />
         </div>
 
         <div>
           <label className="block mb-2 font-medium">
-            SKU *
+            SKU (Optional)
           </label>
 
           <input
@@ -71,29 +70,13 @@ export default function ProductBasicInfo({
             value={formData.sku}
             onChange={handleChange}
             className="w-full border rounded-lg p-3 uppercase"
-            placeholder="SKU"
-            required
+            placeholder="Optional SKU (e.g. VB-MAX-20KG)"
           />
         </div>
 
         <div>
           <label className="block mb-2 font-medium">
-            Barcode
-          </label>
-
-          <input
-            type="text"
-            name="barcode"
-            value={formData.barcode}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-            placeholder="Barcode"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Unit
+            Unit *
           </label>
 
           <select
@@ -101,15 +84,15 @@ export default function ProductBasicInfo({
             value={formData.unit}
             onChange={handleChange}
             className="w-full border rounded-lg p-3"
+            required
           >
             <option value="PCS">PCS</option>
+            <option value="BAG">BAG (20KG/50KG)</option>
             <option value="BOX">BOX</option>
-            <option value="BAG">BAG</option>
             <option value="KG">KG</option>
             <option value="LITER">LITER</option>
           </select>
         </div>
-
       </div>
     </div>
   );

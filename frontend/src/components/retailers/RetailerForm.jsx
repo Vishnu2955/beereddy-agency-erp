@@ -150,7 +150,7 @@ export default function RetailerForm({
         />
       </div>
 
-      <div className="grid md:grid-cols-3 gap-5">
+      <div className="grid md:grid-cols-2 gap-5">
 
         <div>
           <label className="block mb-1 font-medium">
@@ -161,20 +161,6 @@ export default function RetailerForm({
             type="text"
             name="gstNumber"
             value={form.gstNumber}
-            onChange={handleChange}
-            className="w-full border rounded-lg px-4 py-2"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-1 font-medium">
-            Credit Limit
-          </label>
-
-          <input
-            type="number"
-            name="creditLimit"
-            value={form.creditLimit}
             onChange={handleChange}
             className="w-full border rounded-lg px-4 py-2"
           />

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
@@ -13,8 +14,16 @@ import Invoice from "./pages/Invoice";
 import Payments from "./pages/Payments";
 import Outstanding from "./pages/Outstanding";
 import Inventory from "./pages/Inventory";
+import AuditLogs from "./pages/AuditLogs";
+import Analytics from "./pages/Analytics";
 import VerifyOtp from "./pages/VerifyOtp";
 import ResetPassword from "./pages/ResetPassword";
+import SecurityDashboard from "./pages/SecurityDashboard";
+import SecuritySettings from "./pages/SecuritySettings";
+import MobileSettings from "./pages/MobileSettings";
+import SystemStatus from "./pages/SystemStatus";
+import About from "./pages/About";
+import SystemDiagnostics from "./pages/SystemDiagnostics";
 
 
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -25,8 +34,9 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* Login */}
+        {/* Auth Routes */}
         <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route
   path="/forgot-password"
   element={<ForgotPassword />}
@@ -50,10 +60,20 @@ function App() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/settings/notifications/whatsapp" element={<Settings />} />
           <Route path="/invoice/:id" element={<Invoice />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="/outstanding" element={<Outstanding />} />
+          <Route path="/outstanding/:id" element={<Outstanding />} />
           <Route path="/inventory" element={<Inventory />} />
+          <Route path="/audit-logs" element={<AuditLogs />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/security-dashboard" element={<SecurityDashboard />} />
+          <Route path="/security-settings" element={<SecuritySettings />} />
+          <Route path="/mobile-settings" element={<MobileSettings />} />
+          <Route path="/system-status" element={<SystemStatus />} />
+          <Route path="/system-diagnostics" element={<SystemDiagnostics />} />
+          <Route path="/about" element={<About />} />
 
         </Route>
 

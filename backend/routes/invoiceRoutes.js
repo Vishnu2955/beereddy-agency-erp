@@ -12,10 +12,8 @@ const {
   isAdmin,
 } = require("../middleware/authMiddleware");
 
-router.get("/", verifyToken, isAdmin, getInvoices);
-
-router.get("/:id", verifyToken, isAdmin, getInvoice);
-
+router.get("/", verifyToken, getInvoices);
+router.get("/:id", verifyToken, getInvoice);
 router.post("/", verifyToken, isAdmin, createInvoice);
 
 module.exports = router;

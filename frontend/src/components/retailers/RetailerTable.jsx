@@ -57,10 +57,6 @@ export default function RetailerTable({
               </th>
 
               <th className="px-5 py-4 text-right">
-                Credit Limit
-              </th>
-
-              <th className="px-5 py-4 text-right">
                 Outstanding
               </th>
 
@@ -101,12 +97,14 @@ export default function RetailerTable({
                   {retailer.email || "-"}
                 </td>
 
-                <td className="px-5 py-4 text-right font-medium">
-                  ₹{Number(retailer.creditLimit || 0).toLocaleString("en-IN")}
-                </td>
-
-                <td className="px-5 py-4 text-right font-semibold text-red-600">
-                ₹{Number(retailer.outstanding || 0).toLocaleString("en-IN")}
+                <td className="px-5 py-4 text-right">
+                  {Number(retailer.outstanding || 0) > 0 ? (
+                    <span className="font-black text-rose-600">₹{Number(retailer.outstanding).toLocaleString("en-IN")}</span>
+                  ) : (
+                    <span className="font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 text-xs">
+                      ₹0 (Cleared)
+                    </span>
+                  )}
                 </td>
 
                 <td className="px-5 py-4 text-center">

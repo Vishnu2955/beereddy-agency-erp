@@ -3,233 +3,159 @@ import {
   FaTrash,
   FaBoxOpen,
   FaShoppingCart,
+  FaCube,
+  FaEye,
 } from "react-icons/fa";
 
 const IMAGE_URL = "http://localhost:5000/uploads/products/";
-const user = JSON.parse(localStorage.getItem("user"));
-const role = user?.role || "";
+
 export default function ProductTable({
   products,
   onEdit,
   onDelete,
   onAddToCart,
+  onView3D,
 }) {
+  const user = JSON.parse(localStorage.getItem("user"));
+  const role = user?.role || "admin";
+
   if (!products.length) {
     return (
-      <div className="bg-white rounded-xl shadow p-16 text-center">
-
-        <FaBoxOpen
-          className="mx-auto text-6xl text-gray-300 mb-4"
-        />
-
-        <h2 className="text-2xl font-bold">
-          No Products Found
-        </h2>
-
-        <p className="text-gray-500 mt-2">
-          Add your first product to start managing inventory.
-        </p>
-
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-16 text-center">
+        <FaBoxOpen className="mx-auto text-5xl text-slate-300 mb-3" />
+        <h3 className="text-xl font-bold text-slate-800">No Products Available</h3>
+        <p className="text-slate-500 text-xs mt-1">Add your first product to start managing inventory catalog.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow overflow-hidden">
-
+    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-
-        <table className="min-w-full">
-
-          <thead className="bg-gray-100 sticky top-0">
-
-            <tr>
-
-              <th className="px-5 py-4 text-left">
-                Image
-              </th>
-
-              <th className="px-5 py-4 text-left">
-                Product
-              </th>
-
-              <th className="px-5 py-4 text-left">
-                Brand
-              </th>
-
-              <th className="px-5 py-4 text-left">
-                Category
-              </th>
-
-              <th className="px-5 py-4 text-left">
-                SKU
-              </th>
-
-              <th className="px-5 py-4 text-right">
-                MRP
-              </th>
-
-              <th className="px-5 py-4 text-right">
-                Selling
-              </th>
-
-              <th className="px-5 py-4 text-center">
-                Stock
-              </th>
-
-              <th className="px-5 py-4 text-center">
-                Status
-              </th>
-
-              <th className="px-5 py-4 text-center">
-                Actions
-              </th>
-
+        <table className="min-w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+              <th className="px-5 py-4">Item</th>
+              <th className="px-5 py-4">Product Info</th>
+              <th className="px-5 py-4">Category</th>
+              <th className="px-5 py-4">SKU / Code</th>
+              <th className="px-5 py-4 text-right">MRP</th>
+              <th className="px-5 py-4 text-right">Selling Price</th>
+              <th className="px-5 py-4 text-center">Stock Level</th>
+              <th className="px-5 py-4 text-center">Status</th>
+              <th className="px-5 py-4 text-center">Actions</th>
             </tr>
-
           </thead>
 
-          <tbody>
+          <tbody className="divide-y divide-slate-100 text-xs">
+            {products.map((product) => {
+              const isLowStock = product.stock <= (product.minimumStock || 10);
+              const isOutOfStock = product.stock <= 0;
 
-            {products.map((product) => (
+              return (
+                <tr key={product._id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="px-5 py-3.5">
+                    {product.image ? (
+                      <img
+                        src={product.image.startsWith("http") ? product.image : `${IMAGE_URL}${product.image}`}
+                        alt={product.productName}
+                        className="w-12 h-12 rounded-xl object-contain border border-slate-200 bg-white p-1 shadow-2xs"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200">
+                        <FaBoxOpen className="text-lg" />
+                      </div>
+                    )}
+                  </td>
 
-              <tr
-                key={product._id}
-                className="border-t hover:bg-blue-50 transition"
-              >
+                  <td className="px-5 py-3.5">
+                    <p className="font-extrabold text-slate-800 text-sm leading-snug">{product.productName}</p>
+                    {product.brand && (
+                      <span className="text-[11px] font-medium text-slate-400">Brand: {product.brand}</span>
+                    )}
+                  </td>
 
-                <td className="px-5 py-4">
+                  <td className="px-5 py-3.5">
+                    <span className="bg-slate-100 text-slate-700 font-bold text-[10px] px-2.5 py-1 rounded-md border border-slate-200 uppercase tracking-wider">
+                      {product.category || "General"}
+                    </span>
+                  </td>
 
-                  {product.image ? (
+                  <td className="px-5 py-3.5 font-mono text-slate-500 text-[11px]">
+                    {product.sku || "-"}
+                  </td>
 
-                    <img
-                      src={`${IMAGE_URL}${product.image}`}
-                      alt={product.productName}
-                      className="w-16 h-16 rounded-xl object-cover border shadow-sm"
-                    />
+                  <td className="px-5 py-3.5 text-right font-medium text-slate-400 line-through">
+                    ₹{Number(product.mrp || 0).toLocaleString("en-IN")}
+                  </td>
 
-                  ) : (
+                  <td className="px-5 py-3.5 text-right font-extrabold text-emerald-700 text-sm">
+                    ₹{Number(product.sellingPrice || 0).toLocaleString("en-IN")}
+                  </td>
 
-                    <div className="w-16 h-16 rounded-xl bg-gray-200 flex items-center justify-center">
+                  <td className="px-5 py-3.5 text-center font-extrabold text-slate-800">
+                    {product.stock} {product.unit || "PCS"}
+                  </td>
 
-                      <FaBoxOpen className="text-gray-500" />
+                  <td className="px-5 py-3.5 text-center">
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
+                      isOutOfStock
+                        ? "bg-rose-50 text-rose-700 border-rose-200"
+                        : isLowStock
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    }`}>
+                      {isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : "In Stock"}
+                    </span>
+                  </td>
 
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => onView3D && onView3D(product)}
+                        className="bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 transition w-8 h-8 rounded-xl flex items-center justify-center border border-indigo-200 shadow-2xs"
+                        title="3D Interactive Model"
+                      >
+                        <FaCube className="text-sm" />
+                      </button>
+
+                      {role === "admin" && (
+                        <>
+                          <button
+                            onClick={() => onEdit(product)}
+                            className="bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 transition w-8 h-8 rounded-xl flex items-center justify-center border border-blue-200 shadow-2xs"
+                            title="Edit Product"
+                          >
+                            <FaEdit className="text-sm" />
+                          </button>
+
+                          <button
+                            onClick={() => onDelete(product)}
+                            className="bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 transition w-8 h-8 rounded-xl flex items-center justify-center border border-rose-200 shadow-2xs"
+                            title="Delete Product"
+                          >
+                            <FaTrash className="text-sm" />
+                          </button>
+                        </>
+                      )}
+
+                      {role === "retailer" && (
+                        <button
+                          onClick={() => onAddToCart(product)}
+                          disabled={isOutOfStock}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold shadow-sm disabled:opacity-50"
+                        >
+                          <FaShoppingCart /> Add
+                        </button>
+                      )}
                     </div>
-
-                  )}
-
-                </td>
-
-                <td className="px-5 py-4 font-semibold">
-
-                  {product.productName}
-
-                </td>
-
-                <td className="px-5 py-4">
-
-                  {product.brand || "-"}
-
-                </td>
-
-                <td className="px-5 py-4">
-
-                  {product.category}
-
-                </td>
-
-                <td className="px-5 py-4">
-
-                  {product.sku}
-
-                </td>
-
-                <td className="px-5 py-4 text-right font-medium">
-
-                  ₹{product.mrp}
-
-                </td>
-
-                <td className="px-5 py-4 text-right font-semibold text-green-600">
-
-                  ₹{product.sellingPrice}
-
-                </td>
-
-                <td className="px-5 py-4 text-center">
-
-                  {product.stock}
-
-                </td>
-
-                <td className="px-5 py-4 text-center">
-
-                  {product.stock <= product.minimumStock ? (
-
-                    <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">
-
-                      Low Stock
-
-                    </span>
-
-                  ) : (
-
-                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
-
-                      In Stock
-
-                    </span>
-
-                  )}
-
-                </td>
-
-                <td className="px-5 py-4">
-
-                  <div className="flex justify-center gap-3">
-
-  {role === "admin" && (
-    <>
-      <button
-        onClick={() => onEdit(product)}
-        className="bg-blue-100 hover:bg-blue-600 hover:text-white transition w-10 h-10 rounded-full flex items-center justify-center"
-      >
-        <FaEdit />
-      </button>
-
-      <button
-        onClick={() => onDelete(product)}
-        className="bg-red-100 hover:bg-red-600 hover:text-white transition w-10 h-10 rounded-full flex items-center justify-center"
-      >
-        <FaTrash />
-      </button>
-    </>
-  )}
-
-  {role === "retailer" && (
-    <button
-      onClick={() => onAddToCart(product)}
-      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-    >
-      <FaShoppingCart />
-      Add to Cart
-    </button>
-  )}
-
-</div>
-
-                </td>
-
-              </tr>
-
-            ))}
-
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
-
         </table>
-
       </div>
-
     </div>
   );
-}
+}

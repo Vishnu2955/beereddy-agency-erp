@@ -1,43 +1,64 @@
+const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const User = require("../models/User");
 const Order = require("../models/Order");
+
+const Payment = require("../models/Payment");
 
 // ==============================
 // Dashboard Statistics
 // ==============================
 const getDashboardStats = async (req, res) => {
   try {
-    const totalProducts = await Product.countDocuments();
+    const isRetailer = req.user && req.user.role === "retailer";
+    const retailerId = isRetailer ? new mongoose.Types.ObjectId(req.user.id) : null;
 
-    const totalRetailers = await User.countDocuments({
-      role: "retailer",
-    });
+    const totalProducts = await Product.countDocuments({ isActive: true });
 
-    const totalOrders = await Order.countDocuments();
+    const totalRetailers = isRetailer
+      ? 1
+      : await User.countDocuments({ role: "retailer" });
 
-    const pendingOrders = await Order.countDocuments({
-      orderStatus: "Pending",
-    });
+    const totalOrders = isRetailer
+      ? await Order.countDocuments({ retailer: retailerId })
+      : await Order.countDocuments();
+
+    const pendingOrders = isRetailer
+      ? await Order.countDocuments({ retailer: retailerId, orderStatus: { $in: ["Pending", "Processing", "Packed", "Shipped"] } })
+      : await Order.countDocuments({ orderStatus: "Pending" });
 
     const lowStockProducts = await Product.countDocuments({
-      $expr: {
-        $lte: ["$stock", "$minimumStock"],
-      },
+      $expr: { $lte: ["$stock", "$minimumStock"] },
     });
 
+    const matchStage = isRetailer ? { retailer: retailerId, orderStatus: { $ne: "Cancelled" } } : { orderStatus: { $ne: "Cancelled" } };
+
     const sales = await Order.aggregate([
+      { $match: matchStage },
       {
         $group: {
           _id: null,
-          totalSales: {
-            $sum: "$totalAmount",
-          },
+          totalSales: { $sum: { $ifNull: ["$finalAmount", "$totalAmount"] } },
         },
       },
     ]);
 
-    const totalSales =
-      sales.length > 0 ? sales[0].totalSales : 0;
+    const totalSales = sales.length > 0 ? sales[0].totalSales : 0;
+
+    let outstandingAmount = 0;
+    if (isRetailer) {
+      const retailerOrders = await Order.find({ 
+        retailer: retailerId, 
+        orderStatus: { $ne: "Cancelled" },
+        paymentStatus: { $ne: "Paid" }
+      });
+      for (const ord of retailerOrders) {
+        const approvedPayments = await Payment.find({ order: ord._id, status: { $in: ["Approved", "Paid"] } });
+        const paidForOrd = approvedPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
+        const ordTotal = Number(ord.finalAmount || ord.totalAmount || 0);
+        outstandingAmount += Math.max(0, ordTotal - paidForOrd);
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -48,9 +69,11 @@ const getDashboardStats = async (req, res) => {
         pendingOrders,
         lowStockProducts,
         totalSales,
+        outstandingAmount,
       },
     });
   } catch (error) {
+    console.error("Dashboard Stats Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -63,7 +86,10 @@ const getDashboardStats = async (req, res) => {
 // ==============================
 const getRecentOrders = async (req, res) => {
   try {
-    const recentOrders = await Order.find()
+    const isRetailer = req.user && req.user.role === "retailer";
+    const filter = isRetailer ? { retailer: req.user.id } : {};
+
+    const recentOrders = await Order.find(filter)
       .populate("retailer", "fullName shopName phone")
       .sort({ createdAt: -1 })
       .limit(10);
@@ -74,6 +100,7 @@ const getRecentOrders = async (req, res) => {
       recentOrders,
     });
   } catch (error) {
+    console.error("Recent Orders Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -106,23 +133,23 @@ const getLowStockProducts = async (req, res) => {
 };
 
 // ==============================
-// Monthly Sales
+// Monthly Sales / Purchases
 // ==============================
 const getMonthlySales = async (req, res) => {
   try {
+    const isRetailer = req.user && req.user.role === "retailer";
+    const matchStage = isRetailer ? { retailer: new mongoose.Types.ObjectId(req.user.id) } : {};
+
     const sales = await Order.aggregate([
+      { $match: matchStage },
       {
         $group: {
           _id: {
             month: { $month: "$createdAt" },
             year: { $year: "$createdAt" },
           },
-          totalSales: {
-            $sum: "$totalAmount",
-          },
-          totalOrders: {
-            $sum: 1,
-          },
+          totalSales: { $sum: "$totalAmount" },
+          totalOrders: { $sum: 1 },
         },
       },
       {
@@ -138,6 +165,7 @@ const getMonthlySales = async (req, res) => {
       sales,
     });
   } catch (error) {
+    console.error("Monthly Sales Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -150,13 +178,15 @@ const getMonthlySales = async (req, res) => {
 // ==============================
 const getOrderStatus = async (req, res) => {
   try {
+    const isRetailer = req.user && req.user.role === "retailer";
+    const matchStage = isRetailer ? { retailer: new mongoose.Types.ObjectId(req.user.id) } : {};
+
     const status = await Order.aggregate([
+      { $match: matchStage },
       {
         $group: {
           _id: "$orderStatus",
-          count: {
-            $sum: 1,
-          },
+          count: { $sum: 1 },
         },
       },
       {
@@ -167,9 +197,7 @@ const getOrderStatus = async (req, res) => {
         },
       },
       {
-        $sort: {
-          count: -1,
-        },
+        $sort: { count: -1 },
       },
     ]);
 
@@ -178,6 +206,7 @@ const getOrderStatus = async (req, res) => {
       status,
     });
   } catch (error) {
+    console.error("Order Status Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -186,38 +215,27 @@ const getOrderStatus = async (req, res) => {
 };
 
 // ==============================
-// Top Selling Products
+// Top Selling / Purchased Products
 // ==============================
 const getTopSellingProducts = async (req, res) => {
   try {
+    const isRetailer = req.user && req.user.role === "retailer";
+    const matchStage = isRetailer ? { retailer: new mongoose.Types.ObjectId(req.user.id) } : {};
+
     const products = await Order.aggregate([
-      {
-        $unwind: "$items",
-      },
+      { $match: matchStage },
+      { $unwind: "$items" },
       {
         $group: {
           _id: "$items.productName",
-          totalQuantity: {
-            $sum: "$items.quantity",
-          },
+          totalQuantity: { $sum: "$items.quantity" },
           totalRevenue: {
-            $sum: {
-              $multiply: [
-                "$items.quantity",
-                "$items.price",
-              ],
-            },
+            $sum: { $multiply: ["$items.quantity", "$items.price"] },
           },
         },
       },
-      {
-        $sort: {
-          totalQuantity: -1,
-        },
-      },
-      {
-        $limit: 10,
-      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 10 },
     ]);
 
     res.status(200).json({
@@ -225,6 +243,7 @@ const getTopSellingProducts = async (req, res) => {
       topProducts: products,
     });
   } catch (error) {
+    console.error("Top Products Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,

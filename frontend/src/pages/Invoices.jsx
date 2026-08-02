@@ -8,6 +8,7 @@ import {
   FaSearch,
 } from "react-icons/fa";
 
+import { getUser } from "../utils/auth";
 import orderService from "../services/orderService";
 
 export default function Invoices() {
@@ -20,6 +21,9 @@ export default function Invoices() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
+
+  const currentUser = getUser();
+  const isRetailer = currentUser?.role === "retailer";
 
   useEffect(() => {
 
@@ -71,7 +75,9 @@ export default function Invoices() {
 
       setLoading(true);
 
-      const data = await orderService.getOrders();
+      const data = isRetailer
+        ? await orderService.getMyOrders()
+        : await orderService.getOrders(1, 1000);
 
       setOrders(data.orders || []);
 
@@ -249,7 +255,7 @@ export default function Invoices() {
 
                 <td className="p-4 text-center font-bold text-green-600">
 
-                  ₹{Number(order.finalAmount || order.totalAmount).toLocaleString("en-IN")}
+                  ₹{Number(order.finalAmount && Number(order.finalAmount) > Number(order.totalAmount || 0) ? order.finalAmount : Math.round(Number(order.totalAmount || 0) * 1.18)).toLocaleString("en-IN")}
 
                 </td>
                                 <td className="p-4 text-center">

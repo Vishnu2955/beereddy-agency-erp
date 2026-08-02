@@ -1,69 +1,78 @@
 const Payment = require("../models/Payment");
 const Order = require("../models/Order");
 
+const recalculateOrderPaymentStatus = async (orderId) => {
+  if (!orderId) return;
+
+  const order = await Order.findById(orderId);
+  if (!order) return;
+
+  const approvedPayments = await Payment.find({
+    order: orderId,
+    status: { $in: ["Approved", "Paid"] },
+  });
+
+  const totalPaidForOrder = approvedPayments.reduce(
+    (sum, p) => sum + Number(p.amount || 0),
+    0
+  );
+
+  const orderTotal = Number(order.finalAmount || order.totalAmount || 0);
+
+  let newPaymentStatus = "Pending";
+  if (totalPaidForOrder >= orderTotal && orderTotal > 0) {
+    newPaymentStatus = "Paid";
+  } else if (totalPaidForOrder > 0) {
+    newPaymentStatus = "Partially Paid";
+  }
+
+  await Order.findByIdAndUpdate(
+    orderId,
+    { paymentStatus: newPaymentStatus },
+    { runValidators: false }
+  );
+};
+
 const createPayment = async (req, res) => {
   try {
     const data = {
       ...req.body,
+      retailer: req.body.retailer || (req.user && (req.user.id || req.user._id)),
+      status: req.body.status || "Pending",
     };
 
-    // Get total non-cancelled orders
-    const orders = await Order.find({
-      retailer: data.retailer,
-      orderStatus: { $ne: "Cancelled" },
-    });
-
-    const totalOrders = orders.reduce(
-      (sum, order) => sum + Number(order.finalAmount || 0),
-      0
-    );
-
-    // Get only approved payments
-    const existingPayments = await Payment.find({
-  retailer: data.retailer,
-  status: { $in: ["Pending", "Approved"] },
-});
-
-const totalPaidOrPending = existingPayments.reduce(
-  (sum, payment) => sum + Number(payment.amount || 0),
-  0
-);
-
-const outstanding = totalOrders - totalPaidOrPending;
     const paymentAmount = Number(data.amount);
 
-    // Validation
-    if (paymentAmount > outstanding) {
-      return res.status(400).json({
-        success: false,
-        message: `Payment exceeds outstanding amount. Remaining outstanding is ₹${outstanding.toLocaleString("en-IN")}.`,
-      });
-    }
-
-    if (paymentAmount <= 0) {
+    if (isNaN(paymentAmount) || paymentAmount <= 0) {
       return res.status(400).json({
         success: false,
         message: "Payment amount must be greater than zero.",
       });
     }
 
-    // Save uploaded screenshot
+    // Save uploaded screenshot if provided
     if (req.file) {
       data.screenshot = `/uploads/payments/${req.file.filename}`;
     }
 
     const payment = await Payment.create(data);
 
+    // If payment is approved and linked to an order, recalculate order payment status
+    if (payment.order && (payment.status === "Approved" || payment.status === "Paid")) {
+      await recalculateOrderPaymentStatus(payment.order);
+    }
+
     res.status(201).json({
       success: true,
-      message: "Payment request submitted successfully.",
+      message: "Payment record created successfully.",
       payment,
     });
 
   } catch (error) {
+    console.error("Create Payment Error:", error);
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Failed to process payment record.",
     });
   }
 };
@@ -72,7 +81,10 @@ const outstanding = totalOrders - totalPaidOrPending;
 // ==============================
 const getAllPayments = async (req, res) => {
   try {
-    const payments = await Payment.find()
+    const isRetailer = req.user && req.user.role === "retailer";
+    const filter = isRetailer ? { retailer: req.user.id } : {};
+
+    const payments = await Payment.find(filter)
       .populate("retailer", "fullName shopName phone")
       .populate("order", "invoiceNumber orderNumber totalAmount finalAmount")
       .populate("verifiedBy", "fullName")
@@ -134,16 +146,10 @@ const updatePaymentStatus = async (req, res) => {
     payment.verifiedAt = new Date();
 
     await payment.save();
+
     if (payment.order) {
-  await Order.findByIdAndUpdate(payment.order, {
-    paymentStatus:
-      status === "Approved"
-        ? "Paid"
-        : status === "Rejected"
-        ? "Failed"
-        : "Pending",
-  });
-}
+      await recalculateOrderPaymentStatus(payment.order);
+    }
 
     res.status(200).json({
       success: true,
@@ -172,7 +178,12 @@ const deletePayment = async (req, res) => {
       });
     }
 
+    const linkedOrder = payment.order;
     await payment.deleteOne();
+
+    if (linkedOrder) {
+      await recalculateOrderPaymentStatus(linkedOrder);
+    }
 
     res.status(200).json({
       success: true,

@@ -124,20 +124,48 @@ export default function OrderItems({
 
           </select>
 
-          <input
-            type="number"
-            min="1"
-            value={item.quantity}
-            onChange={(e) =>
-              handleItemChange(
-                index,
-                "quantity",
-                e.target.value
-              )
-            }
-            className="border rounded-lg px-3 py-2"
-            placeholder="Quantity"
-          />
+          <div className="flex items-center border rounded-lg overflow-hidden bg-white">
+            <button
+              type="button"
+              onClick={() =>
+                handleItemChange(
+                  index,
+                  "quantity",
+                  Math.max(1, (Number(item.quantity) || 1) - 1)
+                )
+              }
+              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition"
+            >
+              -
+            </button>
+            <input
+              type="number"
+              min="1"
+              value={item.quantity}
+              onChange={(e) =>
+                handleItemChange(
+                  index,
+                  "quantity",
+                  e.target.value
+                )
+              }
+              className="w-full text-center px-2 py-2 outline-none font-bold text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              placeholder="Qty"
+            />
+            <button
+              type="button"
+              onClick={() =>
+                handleItemChange(
+                  index,
+                  "quantity",
+                  (Number(item.quantity) || 1) + 1
+                )
+              }
+              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition"
+            >
+              +
+            </button>
+          </div>
 
           <input
             type="number"

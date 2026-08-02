@@ -108,13 +108,13 @@ const getAllRetailers = async (req, res) => {
         });
 
         const totalOrders = orders.reduce(
-          (sum, order) => sum + Number(order.finalAmount || 0),
+          (sum, order) => sum + Number(order.finalAmount || order.totalAmount || 0),
           0
         );
 
         const payments = await Payment.find({
           retailer: retailer._id,
-          status: "Approved",
+          status: { $in: ["Approved", "Paid"] },
         });
 
         const totalPayments = payments.reduce(
@@ -122,15 +122,15 @@ const getAllRetailers = async (req, res) => {
           0
         );
 
-        const outstanding = totalOrders - totalPayments;
+        const rawOutstanding = Math.round((totalOrders - totalPayments) * 100) / 100;
+        const outstanding = Math.max(0, rawOutstanding);
 
         return {
           ...retailer.toObject(),
           totalOrders,
           totalPayments,
           outstanding,
-          availableCredit:
-            Number(retailer.creditLimit || 0) - outstanding,
+          availableCredit: Math.max(0, Number(retailer.creditLimit || 0) - outstanding),
         };
       })
     );

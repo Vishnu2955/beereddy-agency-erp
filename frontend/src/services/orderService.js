@@ -8,6 +8,12 @@ const orderService = {
       .then((res) => res.data);
   },
 
+  getMyOrders() {
+    return api
+      .get("/orders/my-orders")
+      .then((res) => res.data);
+  },
+
   getOrderById(id) {
     return api
       .get(`/orders/${id}`)

@@ -6,7 +6,10 @@ const Order = require("../models/Order");
 // =========================================
 const getInvoices = async (req, res) => {
   try {
-    const invoices = await Invoice.find()
+    const isRetailer = req.user && req.user.role === "retailer";
+    const filter = isRetailer ? { retailer: req.user.id } : {};
+
+    const invoices = await Invoice.find(filter)
       .populate("retailer", "shopName fullName phone")
       .populate("order");
 
@@ -123,10 +126,19 @@ const createInvoice = async (req, res) => {
       });
     }
 
-    // Generate invoice number
-    const invoiceCount = await Invoice.countDocuments();
+    // Generate guaranteed sequential invoice number (INV-YYYY-XXXX)
+    const year = new Date().getFullYear();
+    const latestInvoice = await Invoice.findOne().sort({ createdAt: -1 });
+    let nextSeq = 1001;
 
-    const invoiceNumber = `INV-${String(invoiceCount + 1).padStart(6, "0")}`;
+    if (latestInvoice && latestInvoice.invoiceNumber) {
+      const match = latestInvoice.invoiceNumber.match(/(\d+)$/);
+      if (match) {
+        nextSeq = parseInt(match[1], 10) + 1;
+      }
+    }
+
+    const invoiceNumber = `INV-${year}-${String(nextSeq).padStart(4, "0")}`;
 
     // Create invoice
     const invoice = await Invoice.create({

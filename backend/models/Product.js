@@ -22,8 +22,7 @@ const productSchema = new mongoose.Schema(
 
     sku: {
       type: String,
-      unique: true,
-      required: true,
+      default: null,
       uppercase: true,
       trim: true,
     },
@@ -31,9 +30,6 @@ const productSchema = new mongoose.Schema(
     barcode: {
       type: String,
       default: null,
-      unique: true,
-      sparse: true,
-      
     },
 
     purchasePrice: {
@@ -79,6 +75,11 @@ const productSchema = new mongoose.Schema(
       default: "",
     },
 
+    image3d: {
+      type: String,
+      default: "",
+    },
+
     description: {
       type: String,
       default: "",
@@ -91,6 +92,15 @@ const productSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+  }
+);
+
+// Enforce SKU uniqueness ONLY when SKU is a non-empty string
+productSchema.index(
+  { sku: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { sku: { $type: "string" } },
   }
 );
 

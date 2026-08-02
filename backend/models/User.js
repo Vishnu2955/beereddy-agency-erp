@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema(
 
     shopName: {
       type: String,
-      required: true,
+      default: "",
       trim: true,
     },
 
@@ -50,24 +50,55 @@ const userSchema = new mongoose.Schema(
     },
 
     creditLimit: {
-  type: Number,
-  default: 0,
-},
+      type: Number,
+      default: 0,
+    },
 
-isActive: {
-  type: Boolean,
-  default: true,
-},
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
 
-otp: {
-  type: String,
-  default: null,
-},
+    otp: {
+      type: String,
+      default: null,
+    },
 
-otpExpires: {
-  type: Date,
-  default: null,
-},
+    otpExpires: {
+      type: Date,
+      default: null,
+    },
+
+    // Security & Lockout Fields
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+    },
+
+    lockUntil: {
+      type: Date,
+      default: null,
+    },
+
+    lastLoginAt: {
+      type: Date,
+      default: null,
+    },
+
+    lastFailedLoginAt: {
+      type: Date,
+      default: null,
+    },
+
+    lastLoginIp: {
+      type: String,
+      default: "",
+    },
+
+    lastLoginUserAgent: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

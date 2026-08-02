@@ -1,4 +1,7 @@
 const Product = require("../models/Product");
+const Inventory = require("../models/Inventory");
+const { syncProductInventory } = require("../utils/inventoryHelper");
+const { recordAuditLog } = require("../middleware/auditLogger");
 
 // ==========================================
 // Add Product
@@ -7,24 +10,22 @@ const addProduct = async (req, res) => {
   try {
     const {
       productName,
-      brand,
+      brand = "",
       category,
       sku,
-      barcode,
       purchasePrice,
       sellingPrice,
       mrp,
-      gst,
-      stock,
-      minimumStock,
-      unit,
-      description,
+      gst = 18,
+      stock = 0,
+      minimumStock = 5,
+      unit = "PCS",
+      description = "",
     } = req.body;
 
     if (
       !productName ||
       !category ||
-      !sku ||
       purchasePrice == null ||
       sellingPrice == null ||
       mrp == null
@@ -32,60 +33,66 @@ const addProduct = async (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Product Name, Category, SKU, Purchase Price, Selling Price and MRP are required.",
+          "Product Name, Category, Purchase Price, Selling Price and MRP are required.",
       });
     }
 
-    // SKU Check
-    const skuExists = await Product.findOne({ sku });
-
-    if (skuExists) {
-      return res.status(400).json({
-        success: false,
-        message: "SKU already exists.",
-      });
-    }
-
-    // Barcode Check
-    if (barcode) {
-      const barcodeExists = await Product.findOne({ barcode });
-
-      if (barcodeExists) {
+    // Optional SKU Validation & Formatting
+    let finalSku = null;
+    if (sku && String(sku).trim() !== "") {
+      finalSku = String(sku).trim().toUpperCase();
+      const skuExists = await Product.findOne({ sku: finalSku });
+      if (skuExists) {
         return res.status(400).json({
           success: false,
-          message: "Barcode already exists.",
+          message: "SKU already exists. Please use a unique SKU or leave it blank.",
         });
       }
     }
 
+    // Create Product (Barcode is ignored/optional)
     const product = await Product.create({
       productName,
       brand,
       category,
-      sku,
-      barcode,
-      purchasePrice,
-      sellingPrice,
-      mrp,
-      gst,
-      stock,
-      minimumStock,
+      sku: finalSku,
+      purchasePrice: Number(purchasePrice),
+      sellingPrice: Number(sellingPrice),
+      mrp: Number(mrp),
+      gst: Number(gst),
+      stock: Number(stock || 0),
+      minimumStock: Number(minimumStock || 5),
       unit,
       description,
       image: req.file ? req.file.filename : "",
     });
 
-    res.status(201).json({
+    // Synchronize Inventory Collection immediately
+    await syncProductInventory(product._id);
+
+    console.log("Created Product & Synced Inventory:", product);
+
+    // Record Security Audit Log
+    await recordAuditLog({
+      req,
+      action: "Product Update",
+      affectedModule: "Products",
+      newValue: { productName: product.productName, sku: product.sku, price: product.sellingPrice, stock: product.stock },
+      reason: `Added new product ${product.productName} with ${product.stock} initial stock`,
+    });
+
+    return res.status(201).json({
       success: true,
       message: "Product Added Successfully",
       product,
     });
   } catch (error) {
+    console.error("========== ADD PRODUCT ERROR ==========");
     console.error(error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Server Error",
+      message: error.message,
     });
   }
 };
@@ -95,12 +102,10 @@ const addProduct = async (req, res) => {
 // ==========================================
 const getAllProducts = async (req, res) => {
   try {
-    // Query Parameters
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 100; // Default 100 for catalog views
     const search = req.query.search || "";
 
-    // Search Filter
     const filter = {};
 
     if (search) {
@@ -109,14 +114,11 @@ const getAllProducts = async (req, res) => {
         { brand: { $regex: search, $options: "i" } },
         { category: { $regex: search, $options: "i" } },
         { sku: { $regex: search, $options: "i" } },
-        { barcode: { $regex: search, $options: "i" } },
       ];
     }
 
-    // Total Products
     const totalProducts = await Product.countDocuments(filter);
 
-    // Fetch Products
     const products = await Product.find(filter)
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -182,35 +184,19 @@ const updateProduct = async (req, res) => {
       });
     }
 
-    // SKU Check
-    if (req.body.sku && req.body.sku !== product.sku) {
-      const skuExists = await Product.findOne({
-        sku: req.body.sku,
-      });
-
-      if (skuExists) {
-        return res.status(400).json({
-          success: false,
-          message: "SKU already exists.",
-        });
+    // SKU Optional Unique Check
+    if (req.body.sku !== undefined) {
+      const newSku = req.body.sku && String(req.body.sku).trim() !== "" ? String(req.body.sku).trim().toUpperCase() : null;
+      if (newSku && newSku !== product.sku) {
+        const skuExists = await Product.findOne({ sku: newSku });
+        if (skuExists) {
+          return res.status(400).json({
+            success: false,
+            message: "SKU already exists.",
+          });
+        }
       }
-    }
-
-    // Barcode Check
-    if (
-      req.body.barcode &&
-      req.body.barcode !== product.barcode
-    ) {
-      const barcodeExists = await Product.findOne({
-        barcode: req.body.barcode,
-      });
-
-      if (barcodeExists) {
-        return res.status(400).json({
-          success: false,
-          message: "Barcode already exists.",
-        });
-      }
+      req.body.sku = newSku;
     }
 
     Object.assign(product, req.body);
@@ -220,6 +206,18 @@ const updateProduct = async (req, res) => {
     }
 
     await product.save();
+
+    // Sync Inventory collection immediately
+    await syncProductInventory(product._id);
+
+    // Audit Log for Product Update
+    await recordAuditLog({
+      req,
+      action: "Product Update",
+      affectedModule: "Products",
+      newValue: { productName: product.productName, stock: product.stock, sellingPrice: product.sellingPrice },
+      reason: `Updated product details for ${product.productName}`,
+    });
 
     res.status(200).json({
       success: true,
@@ -231,7 +229,7 @@ const updateProduct = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: "Server Error",
+      message: error.message || "Server Error",
     });
   }
 };
@@ -249,6 +247,18 @@ const deleteProduct = async (req, res) => {
         message: "Product not found.",
       });
     }
+
+    // Remove associated Inventory document if exists
+    await Inventory.deleteMany({ product: product._id });
+
+    // Audit Log for Product Deletion
+    await recordAuditLog({
+      req,
+      action: "Delete Operation",
+      affectedModule: "Products",
+      oldValue: { productName: product.productName, sku: product.sku },
+      reason: `Deleted product ${product.productName}`,
+    });
 
     await product.deleteOne();
 

@@ -9,10 +9,10 @@ const getSalesReport = async (req, res) => {
   try {
     const orders = await Order.find({
       orderStatus: { $ne: "Cancelled" },
-    }).populate("retailer", "fullName shopName");
+    }).populate("retailer", "fullName shopName phone");
 
     const totalSales = orders.reduce(
-      (sum, order) => sum + order.totalAmount,
+      (sum, order) => sum + Number(order.finalAmount || order.totalAmount || 0),
       0
     );
 
@@ -23,6 +23,7 @@ const getSalesReport = async (req, res) => {
       orders,
     });
   } catch (error) {
+    console.error("Sales Report Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -35,7 +36,7 @@ const getSalesReport = async (req, res) => {
 // =========================================
 const getStockReport = async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find().sort({ productName: 1 });
 
     res.status(200).json({
       success: true,
@@ -43,6 +44,7 @@ const getStockReport = async (req, res) => {
       products,
     });
   } catch (error) {
+    console.error("Stock Report Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -57,30 +59,33 @@ const getRetailerSales = async (req, res) => {
   try {
     const orders = await Order.find({
       orderStatus: { $ne: "Cancelled" },
-    }).populate("retailer", "fullName shopName");
+    }).populate("retailer", "fullName shopName phone");
 
-    const report = {};
+    const reportMap = {};
 
     orders.forEach((order) => {
+      if (!order.retailer) return;
+
       const id = order.retailer._id.toString();
 
-      if (!report[id]) {
-        report[id] = {
+      if (!reportMap[id]) {
+        reportMap[id] = {
           retailer: order.retailer,
           totalOrders: 0,
           totalAmount: 0,
         };
       }
 
-      report[id].totalOrders += 1;
-      report[id].totalAmount += order.totalAmount;
+      reportMap[id].totalOrders += 1;
+      reportMap[id].totalAmount += Number(order.finalAmount || order.totalAmount || 0);
     });
 
     res.status(200).json({
       success: true,
-      report: Object.values(report),
+      report: Object.values(reportMap),
     });
   } catch (error) {
+    console.error("Retailer Sales Report Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -108,7 +113,9 @@ const getSummary = async (req, res) => {
       {
         $group: {
           _id: null,
-          total: { $sum: "$totalAmount" },
+          total: {
+            $sum: { $ifNull: ["$finalAmount", "$totalAmount"] },
+          },
         },
       },
     ]);
@@ -123,6 +130,7 @@ const getSummary = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Summary Report Error:", error);
     res.status(500).json({
       success: false,
       message: error.message,

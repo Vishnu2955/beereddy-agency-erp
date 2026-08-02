@@ -36,8 +36,8 @@ router.get("/", verifyToken, isAdmin, getAllOrders);
 // Search Orders
 router.get("/search", verifyToken, isAdmin, searchOrders);
 
-// Get Single Order
-router.get("/:id", verifyToken, isAdmin, getSingleOrder);
+// Get Single Order (Admin or Retailer for their own order)
+router.get("/:id", verifyToken, getSingleOrder);
 
 // Update Order Status
 router.put("/:id/status", verifyToken, isAdmin, updateOrderStatus);

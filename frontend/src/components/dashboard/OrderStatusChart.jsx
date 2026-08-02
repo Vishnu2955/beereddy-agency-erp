@@ -7,16 +7,19 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-
+import { FaChartPie } from "react-icons/fa";
 import dashboardService from "../../services/dashboardService";
 
-const COLORS = [
-  "#3B82F6",
-  "#10B981",
-  "#F59E0B",
-  "#EF4444",
-  "#8B5CF6",
-];
+const STATUS_COLORS = {
+  Pending: "#f59e0b",
+  Confirmed: "#3b82f6",
+  Packed: "#6366f1",
+  Shipped: "#8b5cf6",
+  Delivered: "#10b981",
+  Cancelled: "#ef4444",
+};
+
+const DEFAULT_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"];
 
 export default function OrderStatusChart() {
   const [data, setData] = useState([]);
@@ -28,39 +31,63 @@ export default function OrderStatusChart() {
   const loadStatus = async () => {
     try {
       const status = await dashboardService.getOrderStatus();
-      setData(status);
+      setData(status || []);
     } catch (err) {
       console.log(err);
     }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow p-6">
-      <h2 className="text-xl font-bold mb-5">
-        Order Status
-      </h2>
+    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-5">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg border border-blue-100">
+          <FaChartPie />
+        </div>
+        <div>
+          <h2 className="text-base font-extrabold text-slate-800">
+            Order Fulfillment Breakdown
+          </h2>
+          <p className="text-xs text-slate-400 font-medium">Real-time order stage distribution</p>
+        </div>
+      </div>
 
-      <ResponsiveContainer width="100%" height={320}>
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="count"
-            nameKey="status"
-            outerRadius={110}
-            label
-          >
-            {data.map((entry, index) => (
-              <Cell
-                key={index}
-                fill={COLORS[index % COLORS.length]}
-              />
-            ))}
-          </Pie>
-
-          <Tooltip />
-          <Legend />
-        </PieChart>
-      </ResponsiveContainer>
+      <div className="h-72 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="count"
+              nameKey="status"
+              innerRadius={60}
+              outerRadius={95}
+              paddingAngle={4}
+              stroke="#ffffff"
+              strokeWidth={2}
+            >
+              {data.map((entry, index) => (
+                <Cell
+                  key={index}
+                  fill={STATUS_COLORS[entry.status] || DEFAULT_COLORS[index % DEFAULT_COLORS.length]}
+                />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#0f172a",
+                borderColor: "#334155",
+                borderRadius: "12px",
+                color: "#ffffff",
+                fontSize: "12px",
+                fontWeight: "bold",
+              }}
+            />
+            <Legend
+              wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }}
+              formatter={(value) => <span className="text-slate-600 font-semibold">{value}</span>}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
-}
+}

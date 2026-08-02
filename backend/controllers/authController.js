@@ -2,6 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
+const { recordAuditLog } = require("../middleware/auditLogger");
 
 // ==============================
 // Register User
@@ -48,14 +49,14 @@ const registerUser = async (req, res) => {
     // Create User
     const user = await User.create({
       fullName,
-      shopName,
+      shopName: shopName || fullName,
       phone,
-      email: email.toLowerCase().trim(),
+      email: email ? email.toLowerCase().trim() : undefined,
       password: hashedPassword,
-      role,
-      address,
-      gstNumber,
-      creditLimit,
+      role: role || "retailer",
+      address: address || "",
+      gstNumber: gstNumber || "",
+      creditLimit: creditLimit || 0,
     });
 
     const userResponse = {
@@ -92,7 +93,9 @@ const registerUser = async (req, res) => {
 // ==============================
 const loginUser = async (req, res) => {
   try {
-    const { login, password } = req.body;
+    const body = req.body || {};
+    const login = body.login || body.email || body.phone;
+    const password = body.password;
 
     // Validation
     if (!login || !password) {
@@ -128,7 +131,7 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Account Disabled
+    // Account Disabled Check
     if (!user.isActive) {
       return res.status(403).json({
         success: false,
@@ -136,15 +139,62 @@ const loginUser = async (req, res) => {
       });
     }
 
+    // Check Account Lockout (15 minutes after 5 failed attempts)
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      const remainingMins = Math.ceil((user.lockUntil - Date.now()) / (60 * 1000));
+      return res.status(403).json({
+        success: false,
+        message: `Account is temporarily locked due to repeated failed login attempts. Try again in ${remainingMins} minute(s).`,
+        lockUntil: user.lockUntil,
+      });
+    }
+
     // Password Check
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+      user.lastFailedLoginAt = new Date();
+
+      const attemptsLeft = Math.max(0, 5 - user.failedLoginAttempts);
+
+      if (user.failedLoginAttempts >= 5) {
+        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minute lock
+        await user.save();
+
+        try {
+          await recordAuditLog({
+            req,
+            user,
+            action: "Login",
+            affectedModule: "Auth",
+            reason: `Account locked after 5 failed login attempts from IP ${req.ip || "127.0.0.1"}`,
+          });
+        } catch (_) {}
+
+        return res.status(403).json({
+          success: false,
+          message: "Account locked! Maximum 5 failed login attempts exceeded. Try again in 15 minutes.",
+          attemptsLeft: 0,
+        });
+      }
+
+      await user.save();
+
       return res.status(401).json({
         success: false,
-        message: "Invalid Password",
+        message: `Invalid Password. ${attemptsLeft} attempt(s) remaining before account lockout.`,
+        attemptsLeft,
       });
     }
+
+    // Successful Login: Reset Lockout & Record Metadata
+    user.failedLoginAttempts = 0;
+    user.lockUntil = null;
+    user.lastLoginAt = new Date();
+    user.lastLoginIp = req.ip || req.headers["x-forwarded-for"] || req.socket.remoteAddress || "127.0.0.1";
+    user.lastLoginUserAgent = req.headers["user-agent"] || "Unknown Agent";
+    await user.save();
 
     // JWT Token
     const token = jwt.sign(
@@ -157,6 +207,15 @@ const loginUser = async (req, res) => {
         expiresIn: "7d",
       }
     );
+
+    // Record Audit Log for Login
+    await recordAuditLog({
+      req,
+      user,
+      action: "Login",
+      affectedModule: "Auth",
+      reason: `User ${user.fullName} (${user.role}) logged in successfully`,
+    });
 
     // User Response
     const userResponse = {
