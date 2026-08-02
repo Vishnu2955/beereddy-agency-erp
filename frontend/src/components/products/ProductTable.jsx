@@ -7,7 +7,7 @@ import {
   FaEye,
 } from "react-icons/fa";
 
-const IMAGE_URL = "http://localhost:5000/uploads/products/";
+const IMAGE_URL = "/uploads/products/";
 
 export default function ProductTable({
   products,

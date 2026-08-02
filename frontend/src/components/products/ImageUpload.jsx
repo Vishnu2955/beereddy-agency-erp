@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const IMAGE_URL = "http://localhost:5000/uploads/products/";
+const IMAGE_URL = "/uploads/products/";
 
 export default function ImageUpload({
   formData,

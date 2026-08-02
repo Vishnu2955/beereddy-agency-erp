@@ -1,11 +1,20 @@
 services:
   - type: web
-    name: beereddy-agency-erp-backend
-    env: node
-    buildCommand: npm install --prefix backend
-    startCommand: npm start --prefix backend
+    name: beereddy-agency-erp
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 5000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

@@ -1,10 +1,25 @@
 const dotenv = require("dotenv");
 dotenv.config();
+
 const express = require("express");
-
 const cors = require("cors");
+const path = require("path");
+const fs = require("fs");
+const mongoose = require("mongoose");
 
-// Database
+// Ensure upload directories exist using absolute paths
+const uploadsDir = path.join(__dirname, "uploads");
+const uploadsProductsDir = path.join(__dirname, "uploads/products");
+const uploadsPaymentsDir = path.join(__dirname, "uploads/payments");
+const uploadsBackupsDir = path.join(__dirname, "uploads/backups");
+
+[uploadsDir, uploadsProductsDir, uploadsPaymentsDir, uploadsBackupsDir].forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
+// Database Connection
 const connectDB = require("./config/db");
 
 // Routes
@@ -31,17 +46,26 @@ const securityRoutes = require("./routes/securityRoutes");
 const backupRoutes = require("./routes/backupRoutes");
 const systemRoutes = require("./routes/systemRoutes");
 const diagnosticsRoutes = require("./routes/diagnosticsRoutes");
-const { setSecurityHeaders, sanitizeInput, loginRateLimiter, apiRateLimiter } = require("./middleware/securityMiddleware");
+
+// Custom Middleware
+const { setSecurityHeaders, sanitizeInput } = require("./middleware/securityMiddleware");
 const { maintenanceMiddleware } = require("./middleware/maintenanceMiddleware");
 const { startBackupScheduler } = require("./utils/backupScheduler");
 const { performanceLogger } = require("./middleware/performanceLogger");
 
-console.log("EMAIL_USER =", process.env.EMAIL_USER);
-console.log("EMAIL_PASS loaded =", !!process.env.EMAIL_PASS);
+// Track Mongo connection state for logging
+let isMongoConnected = false;
+
 // Connect Database & Initialize Backup Scheduler
-connectDB().then(() => {
-  startBackupScheduler();
-});
+connectDB()
+  .then(() => {
+    isMongoConnected = true;
+    startBackupScheduler();
+    console.log("✅ Mongo connected successfully");
+  })
+  .catch((err) => {
+    console.error("⚠️ Mongo connection error on startup:", err.message);
+  });
 
 const app = express();
 
@@ -51,30 +75,114 @@ app.use(performanceLogger);
 app.use(sanitizeInput);
 app.use(maintenanceMiddleware);
 
-// Middleware
-app.use(cors({ origin: true, credentials: true }));
+// Production-ready CORS Configuration
+const allowedOrigins = [
+  process.env.CORS_ORIGIN,
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:5000",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:5000",
+].filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    const validOrigins = allowedOrigins.flatMap((o) => o.split(",").map((s) => s.trim()));
+
+    if (
+      validOrigins.includes(origin) ||
+      validOrigins.includes("*") ||
+      process.env.NODE_ENV !== "production" ||
+      origin.endsWith(".onrender.com")
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Static Folder for Product Images & Frontend PWA Assets
-const path = require("path");
-app.use("/uploads", express.static("uploads"));
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
+// Serve Uploads using absolute path
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.get("/manifest.json", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/public/manifest.json"));
+// Frontend Paths (Dist & Public)
+const frontendDistPath = path.join(__dirname, "../frontend/dist");
+const frontendPublicPath = path.join(__dirname, "../frontend/public");
+const isFrontendDetected = fs.existsSync(frontendDistPath);
+
+if (isFrontendDetected) {
+  app.use(express.static(frontendDistPath));
+} else {
+  console.warn(`⚠️ Warning: Frontend build directory not found at "${frontendDistPath}". Server continuing in API-only mode.`);
+}
+
+// Serve Static PWA & Root Files using absolute paths
+const serveStaticFile = (fileName, mimeType) => (req, res) => {
+  const distFile = path.join(frontendDistPath, fileName);
+  const publicFile = path.join(frontendPublicPath, fileName);
+
+  if (fs.existsSync(distFile)) {
+    if (mimeType) res.setHeader("Content-Type", mimeType);
+    return res.sendFile(distFile);
+  }
+  if (fs.existsSync(publicFile)) {
+    if (mimeType) res.setHeader("Content-Type", mimeType);
+    return res.sendFile(publicFile);
+  }
+  return res.status(404).json({ success: false, message: `File ${fileName} not found` });
+};
+
+app.get("/manifest.json", serveStaticFile("manifest.json", "application/json"));
+app.get("/sw.js", serveStaticFile("sw.js", "application/javascript"));
+app.get("/robots.txt", serveStaticFile("robots.txt", "text/plain"));
+app.get("/icon-192.png", serveStaticFile("icon-192.png", "image/png"));
+app.get("/icon-512.png", serveStaticFile("icon-512.png", "image/png"));
+app.get("/favicon.ico", serveStaticFile("favicon.ico"));
+app.get("/favicon.svg", serveStaticFile("favicon.svg", "image/svg+xml"));
+
+// API Health Check Routes (Must always work and return clean JSON)
+app.get("/health", (req, res) => {
+  const dbStatus = mongoose.connection && mongoose.connection.readyState === 1 ? "CONNECTED" : "DISCONNECTED";
+  res.status(200).json({
+    status: "HEALTHY",
+    service: "Beereddy Agency ERP Backend API",
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+    memoryUsage: process.memoryUsage(),
+    database: dbStatus,
+    frontendDetected: isFrontendDetected,
+  });
 });
 
-app.get("/sw.js", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/public/sw.js"));
+app.get("/status", (req, res) => {
+  const dbStatus = mongoose.connection && mongoose.connection.readyState === 1 ? "CONNECTED" : "DISCONNECTED";
+  res.status(200).json({
+    status: "OPERATIONAL",
+    environment: process.env.NODE_ENV || "production",
+    database: dbStatus,
+    uptimeSeconds: Math.floor(process.uptime()),
+  });
 });
 
-app.get("/icon-192.png", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/public/icon-192.png"));
-});
-
-app.get("/icon-512.png", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/public/icon-512.png"));
+app.get("/version", (req, res) => {
+  res.status(200).json({
+    name: "Beereddy Agency ERP",
+    version: "1.0.0",
+    build: "100",
+    releaseDate: "2026-08-02",
+    environment: process.env.NODE_ENV || "production",
+  });
 });
 
 // API Routes
@@ -102,39 +210,6 @@ app.use("/api/backup", backupRoutes);
 app.use("/api/system", systemRoutes);
 app.use("/api/diagnostics", diagnosticsRoutes);
 
-// Monitoring Health Check Route
-app.get("/health", (req, res) => {
-  const mongoose = require("mongoose");
-  res.json({
-    status: "HEALTHY",
-    service: "Beereddy Agency ERP Backend API",
-    timestamp: new Date().toISOString(),
-    uptimeSeconds: process.uptime(),
-    memoryUsage: process.memoryUsage(),
-    database: mongoose.connection.readyState === 1 ? "CONNECTED" : "DISCONNECTED",
-  });
-});
-
-app.get("/status", (req, res) => {
-  const mongoose = require("mongoose");
-  res.json({
-    status: "OPERATIONAL",
-    environment: process.env.NODE_ENV || "production",
-    database: mongoose.connection.readyState === 1 ? "CONNECTED" : "DISCONNECTED",
-    uptimeSeconds: process.uptime(),
-  });
-});
-
-app.get("/version", (req, res) => {
-  res.json({
-    name: "Beereddy Agency ERP",
-    version: "1.0.0",
-    build: "100",
-    releaseDate: "2026-08-02",
-    environment: process.env.NODE_ENV || "production",
-  });
-});
-
 // Global Centralized Error Catcher & Bug Reporting Middleware
 app.use(async (err, req, res, next) => {
   console.error("🔥 Global System Error Captured:", err.message);
@@ -157,20 +232,33 @@ app.use(async (err, req, res, next) => {
   });
 });
 
-// Serve Web App SPA index.html for non-API routes
-app.get("/*splat", (req, res) => {
+// Catch-all SPA Handler for non-API routes
+app.get("*splat", (req, res) => {
   if (req.path.startsWith("/api")) {
     return res.status(404).json({
       success: false,
       message: "API Route Not Found",
     });
   }
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+
+  const indexPath = path.join(frontendDistPath, "index.html");
+  if (isFrontendDetected && fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+
+  res.status(200).send("Beereddy Agency ERP Backend API is running. Frontend build not present.");
 });
 
 // Start Server
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on Port ${PORT} (Network Host 0.0.0.0 Enabled)`);
+  console.log("==========================================");
+  console.log("🚀 Server started successfully!");
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || "production"}`);
+  console.log(`🔌 Port: ${PORT}`);
+  console.log(`💻 Host: 0.0.0.0`);
+  console.log(`🎨 Frontend: ${isFrontendDetected ? `Detected (${frontendDistPath})` : `WARNING: Missing build at (${frontendDistPath})`}`);
+  console.log(`🗄️ Mongo Status: ${isMongoConnected ? "Connected" : "Connecting..."}`);
+  console.log("==========================================");
 });

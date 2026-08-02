@@ -14,9 +14,14 @@ const {
 const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
 
 // Storage for uploaded QR code images
+const fs = require("fs");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/");
+    const uploadPath = path.join(__dirname, "../uploads");
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
     cb(null, `qr_${Date.now()}${path.extname(file.originalname)}`);

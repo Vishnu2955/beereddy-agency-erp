@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { FaShoppingCart, FaBoxOpen, FaCube, FaCheckCircle, FaExclamationCircle, FaTag } from "react-icons/fa";
 
-const IMAGE_BASE_URL = "http://localhost:5000/uploads/products/";
+const IMAGE_BASE_URL = "/uploads/products/";
 
 export default function ProductGrid({
   products = [],

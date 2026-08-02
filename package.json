@@ -1,13 +1,21 @@
 {
   "name": "beereddyagency",
   "version": "1.0.0",
-  "description": "",
-  "main": "script.js",
+  "description": "Beereddy Agency ERP - Full Stack Application",
+  "main": "backend/server.js",
   "scripts": {
+    "build": "npm run build --prefix frontend",
+    "start": "npm start --prefix backend",
+    "dev": "npm run dev --prefix backend",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "erp",
+    "beereddy",
+    "express",
+    "react"
+  ],
+  "author": "Beereddy Agency",
   "license": "ISC",
   "type": "commonjs"
 }
