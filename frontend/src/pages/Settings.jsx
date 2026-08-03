@@ -18,13 +18,14 @@ import {
   FaStar,
   FaLock,
 } from "react-icons/fa";
-import api from "../services/api";
 import { getUser } from "../utils/auth";
 import { useTheme } from "../context/ThemeContext";
+import { usePwa } from "../context/PwaContext";
 
 export default function Settings() {
   const currentUser = getUser();
   const isAdmin = currentUser?.role === "admin";
+  const { isInstallable, promptInstall } = usePwa();
 
   const {
     activeThemeId,
@@ -236,7 +237,15 @@ export default function Settings() {
             Personalize your ERP appearance, manage payment options, and update company details.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {isInstallable && (
+            <button
+              onClick={promptInstall}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md transition active:scale-95 cursor-pointer"
+            >
+              <FaDownload /> Install PWA App
+            </button>
+          )}
           <button
             onClick={resetTheme}
             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 border border-slate-700 transition"

@@ -11,6 +11,8 @@ import DeleteOrderModal from "../components/orders/DeleteOrderModal";
 import { successToast, errorToast } from "../utils/toast";
 import { confirmDelete } from "../utils/confirm";
 
+import SkeletonLoader from "../components/common/SkeletonLoader";
+
 const STATUS_FILTERS = ["All", "Pending", "Confirmed", "Packed", "Shipped", "Delivered", "Cancelled"];
 
 export default function Orders() {
@@ -212,22 +214,14 @@ export default function Orders() {
         <div className="w-full md:w-72">
           <SearchBar
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
             placeholder="Search invoice or shop..."
           />
         </div>
-
       </div>
 
       {/* Orders Table */}
       {loading ? (
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-16 text-center">
-          <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-slate-400 font-bold mt-3">Fetching orders register...</p>
-        </div>
+        <SkeletonLoader type="table" count={5} />
       ) : filteredOrders.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-16 text-center">
           <FaClipboardList className="mx-auto text-5xl text-slate-300 mb-3" />

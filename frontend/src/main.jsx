@@ -7,12 +7,15 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import App from "./App";
 import "./index.css";
 import { ThemeProvider } from "./context/ThemeContext";
+import { PwaProvider } from "./context/PwaContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ThemeProvider>
-      <Toaster position="top-right" reverseOrder={false} />
-      <App />
+      <PwaProvider>
+        <Toaster position="top-right" reverseOrder={false} />
+        <App />
+      </PwaProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

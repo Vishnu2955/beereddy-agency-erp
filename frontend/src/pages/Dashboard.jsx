@@ -8,6 +8,7 @@ import RecentOrders from "../components/dashboard/RecentOrders";
 import LowStockTable from "../components/dashboard/LowStockTable";
 import TopProducts from "../components/dashboard/TopProducts";
 import { getUser } from "../utils/auth";
+import { usePwa } from "../context/PwaContext";
 import {
   FaBoxOpen,
   FaStore,
@@ -23,12 +24,17 @@ import {
   FaChartLine,
   FaPlus,
   FaFileDownload,
+  FaDownload,
 } from "react-icons/fa";
+
+import SkeletonLoader from "../components/common/SkeletonLoader";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const currentUser = getUser();
   const isRetailer = currentUser?.role === "retailer";
+  const { isInstallable, promptInstall } = usePwa();
 
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState({
@@ -52,17 +58,18 @@ export default function Dashboard() {
     }
   };
 
+  const { refreshing, pullDistance } = usePullToRefresh(loadDashboard);
+
   useEffect(() => {
     loadDashboard();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[65vh] space-y-4">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        <h2 className="text-sm font-bold text-slate-600 uppercase tracking-wider animate-pulse">
-          Initializing ERP Workspace...
-        </h2>
+      <div className="space-y-6">
+        <div className="h-44 bg-slate-900 rounded-3xl animate-pulse" />
+        <SkeletonLoader type="stats" count={4} />
+        <SkeletonLoader type="table" count={3} />
       </div>
     );
   }
@@ -92,6 +99,14 @@ export default function Dashboard() {
           </div>
 
           <div className="relative z-10 flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            {isInstallable && (
+              <button
+                onClick={promptInstall}
+                className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2 hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+              >
+                <FaDownload /> Install App
+              </button>
+            )}
             <button
               onClick={() => navigate("/products")}
               className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 hover:-translate-y-0.5"

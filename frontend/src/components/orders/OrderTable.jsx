@@ -231,6 +231,146 @@ export default function OrderTable({
           </tbody>
         </table>
       </div>
+
+      {/* Mobile Responsive Orders Card View (Phones < 768px) */}
+      <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+        {orders.map((order) => {
+          const shopName = order.retailer?.shopName || order.retailer?.fullName || "Retailer Partner";
+          const shopInitial = shopName.substring(0, 1).toUpperCase();
+          const orderStatus = order.orderStatus || order.status || "Pending";
+          const grandTotal = Number(order.finalAmount && Number(order.finalAmount) > Number(order.totalAmount || 0) ? order.finalAmount : Math.round(Number(order.totalAmount || 0) * 1.18));
+
+          return (
+            <div
+              key={order._id}
+              className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
+            >
+              {/* Header: Invoice # & Date */}
+              <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2 font-mono font-extrabold text-blue-600 text-xs">
+                  <FaFileInvoice />
+                  <span>{order.invoiceNumber ? `#${order.invoiceNumber}` : "Pending"}</span>
+                </div>
+                <span className="text-[11px] text-slate-400 font-medium">
+                  {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+
+              {/* Retailer Info */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold flex items-center justify-center border border-indigo-100 dark:border-indigo-800 text-sm">
+                  {shopInitial}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-sm truncate">{shopName}</h4>
+                  <span className="text-[11px] text-slate-400">{order.items?.length || 0} Items Ordered</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Grand Total</span>
+                  <span className="font-extrabold text-emerald-600 text-base">
+                    ₹{grandTotal.toLocaleString("en-IN")}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Chips & Selector */}
+              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Payment Status</span>
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
+                      order.paymentStatus === "Paid"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : order.paymentStatus === "Partially Paid"
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-slate-100 text-slate-700 border-slate-200"
+                    }`}
+                  >
+                    {order.paymentStatus || "Pending"}
+                  </span>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Fulfillment Status</span>
+                  {isAdmin ? (
+                    <select
+                      value={orderStatus}
+                      onChange={async (e) => {
+                        try {
+                          const newStatus = e.target.value;
+                          await orderService.updateOrderStatus(order._id, newStatus);
+                          successToast(`Status updated to "${newStatus}"`);
+                          if (onStatusUpdate) onStatusUpdate();
+                        } catch (err) {
+                          errorToast("Failed to update status.");
+                        }
+                      }}
+                      className="px-2.5 py-1 rounded-xl text-[11px] font-extrabold border outline-none bg-white dark:bg-slate-900 border-slate-300"
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Packed">Packed</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  ) : (
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
+                        orderStatus === "Delivered"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : orderStatus === "Cancelled"
+                          ? "bg-rose-50 text-rose-700 border-rose-200"
+                          : "bg-blue-50 text-blue-700 border-blue-200"
+                      }`}
+                    >
+                      {orderStatus}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile Thumb-Friendly Action Buttons (Min 48px height) */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  onClick={() => openInvoice(order._id)}
+                  className="flex-1 min-h-[48px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 border border-indigo-200 active:scale-95 transition"
+                >
+                  <FaEye /> View Invoice
+                </button>
+                <button
+                  onClick={() => printInvoice(order._id)}
+                  className="flex-1 min-h-[48px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 border border-emerald-200 active:scale-95 transition"
+                >
+                  <FaPrint /> Print Invoice
+                </button>
+                {isAdmin && (
+                  <>
+                    <button
+                      onClick={() => onEdit(order)}
+                      className="min-h-[48px] px-3.5 bg-blue-50 text-blue-700 font-bold text-xs rounded-xl flex items-center justify-center border border-blue-200 active:scale-95 transition"
+                      title="Edit Order"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => onDelete(order)}
+                      className="min-h-[48px] px-3.5 bg-rose-50 text-rose-700 font-bold text-xs rounded-xl flex items-center justify-center border border-rose-200 active:scale-95 transition"
+                      title="Delete Order"
+                    >
+                      <FaTrash />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

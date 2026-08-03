@@ -1,14 +1,14 @@
 {
+  "name": "Beereddy Agency ERP",
   "short_name": "Beereddy ERP",
-  "name": "Beereddy Agency ERP | Enterprise Distributor Portal",
-  "description": "Executive Distributor & Retailer Command Center for V Bond Tile Adhesives",
+  "description": "Beereddy Agency Distributor Management System",
   "id": "/",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
-  "orientation": "any",
-  "background_color": "#0f172a",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
   "theme_color": "#0f172a",
   "dir": "ltr",
   "lang": "en-IN",
@@ -16,13 +16,49 @@
   "categories": ["business", "productivity", "shopping"],
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/icons/icon-72x72.png",
+      "type": "image/png",
+      "sizes": "72x72",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "type": "image/png",
+      "sizes": "96x96",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "type": "image/png",
+      "sizes": "128x128",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "type": "image/png",
+      "sizes": "144x144",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "type": "image/png",
+      "sizes": "152x152",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icons/icon-384x384.png",
+      "type": "image/png",
+      "sizes": "384x384",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
@@ -34,21 +70,21 @@
       "short_name": "Order",
       "description": "Place new order or manage fulfillment",
       "url": "/orders",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     },
     {
       "name": "Products Catalog",
       "short_name": "Products",
-      "description": "Browse tiles adhesives & mortars catalog",
+      "description": "Browse tile adhesives & mortars catalog",
       "url": "/products",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     },
     {
       "name": "Invoices & Billing",
       "short_name": "Invoices",
       "description": "View & download tax invoices",
       "url": "/invoices",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     }
   ]
 }

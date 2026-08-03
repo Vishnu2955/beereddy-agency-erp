@@ -1,38 +1,42 @@
+import React from "react";
 import { NavLink } from "react-router-dom";
-import { FaHome, FaBoxOpen, FaClipboardList, FaFileInvoice, FaCog } from "react-icons/fa";
-import { getUser } from "../../utils/auth";
+import { FaHome, FaBoxOpen, FaShoppingCart, FaCreditCard, FaUser } from "react-icons/fa";
 
 export default function MobileBottomNav() {
-  const user = getUser();
-  const isRetailer = user?.role === "retailer";
-
   const navItems = [
-    { name: "Home", path: "/dashboard", icon: <FaHome size={18} /> },
-    { name: "Catalog", path: "/products", icon: <FaBoxOpen size={18} /> },
-    { name: "Orders", path: "/orders", icon: <FaClipboardList size={18} /> },
-    { name: "Invoices", path: "/invoices", icon: <FaFileInvoice size={18} /> },
-    { name: "Settings", path: "/settings", icon: <FaCog size={18} /> },
+    { name: "Home", path: "/dashboard", icon: <FaHome className="text-lg" /> },
+    { name: "Products", path: "/products", icon: <FaBoxOpen className="text-lg" /> },
+    { name: "Orders", path: "/orders", icon: <FaShoppingCart className="text-lg" /> },
+    { name: "Payments", path: "/payments", icon: <FaCreditCard className="text-lg" /> },
+    { name: "Profile", path: "/settings", icon: <FaUser className="text-lg" /> },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 border-t border-slate-800 backdrop-blur-lg lg:hidden px-2 py-1 shadow-2xl print:hidden">
-      <div className="flex items-center justify-around max-w-md mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 border-t border-slate-800/90 backdrop-blur-xl md:hidden px-2 py-1.5 shadow-2xl print:hidden">
+      <div className="flex items-center justify-around max-w-lg mx-auto">
         {navItems.map((item) => (
           <NavLink
             key={item.name}
             to={item.path}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center py-2 px-3 min-h-[44px] min-w-[44px] rounded-xl transition-all duration-200 ${
+              `relative flex flex-col items-center justify-center py-1.5 px-3 min-h-[48px] min-w-[56px] rounded-2xl transition-all duration-300 active:scale-95 ${
                 isActive
-                  ? isRetailer
-                    ? "text-emerald-400 font-extrabold scale-105"
-                    : "text-indigo-400 font-extrabold scale-105"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "text-blue-400 font-black"
+                  : "text-slate-400 hover:text-slate-200 font-semibold"
               }`
             }
           >
-            {item.icon}
-            <span className="text-[10px] font-bold mt-1 tracking-tight">{item.name}</span>
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span className="absolute inset-0 bg-blue-600/20 rounded-2xl border border-blue-500/30 animate-pulse pointer-events-none" />
+                )}
+                <div className={`transition-transform duration-300 ${isActive ? "-translate-y-0.5 scale-110" : ""}`}>
+                  {item.icon}
+                </div>
+                <span className="text-[10px] tracking-tight mt-0.5 z-10">{item.name}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </div>

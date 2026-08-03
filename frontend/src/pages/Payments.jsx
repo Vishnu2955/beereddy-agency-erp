@@ -3,6 +3,7 @@ import api from "../services/api";
 import { getUser } from "../utils/auth";
 import { successToast, errorToast } from "../utils/toast";
 import PaymentGatewayModal from "../components/payments/PaymentGatewayModal";
+import SkeletonLoader from "../components/common/SkeletonLoader";
 import {
   FaCreditCard,
   FaLock,
@@ -371,7 +372,12 @@ export default function PaymentReport() {
   };
 
   if (loading) {
-    return <div className="p-10 text-center text-slate-500 font-semibold">Loading payment portal & records...</div>;
+    return (
+      <div className="space-y-6">
+        <SkeletonLoader type="stats" count={4} />
+        <SkeletonLoader type="table" count={5} />
+      </div>
+    );
   }
 
   const upiVpa = upiVpaInput.trim() || "beereddyagency@ybl";
@@ -850,7 +856,7 @@ export default function PaymentReport() {
               </span>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto hidden md:block">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-slate-100 text-xs uppercase font-bold text-slate-600">
                   <tr>
@@ -909,13 +915,13 @@ export default function PaymentReport() {
                               <div className="flex justify-center gap-2">
                                 <button
                                   onClick={() => updateStatus(payment._id, "Approved")}
-                                  className="bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-green-700"
+                                  className="bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-green-700 min-h-[38px]"
                                 >
                                   Approve
                                 </button>
                                 <button
                                   onClick={() => updateStatus(payment._id, "Rejected")}
-                                  className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-700"
+                                  className="bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-700 min-h-[38px]"
                                 >
                                   Reject
                                 </button>
@@ -930,6 +936,80 @@ export default function PaymentReport() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Responsive Payment Cards (< 768px) */}
+            <div className="grid grid-cols-1 gap-3 p-4 md:hidden">
+              {filteredPayments.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 font-medium">
+                  No payment records found.
+                </div>
+              ) : (
+                filteredPayments.map((payment) => {
+                  const statusVal = payment.status || payment.paymentStatus || "Pending";
+                  return (
+                    <div
+                      key={payment._id}
+                      className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-xs"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="font-extrabold text-slate-900 dark:text-white text-sm">
+                          {payment.retailer?.shopName || payment.retailer?.fullName || currentUser.fullName}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-blue-600">
+                          {payment.order?.invoiceNumber ? `#${payment.order.invoiceNumber}` : payment.referenceNumber || "Txn Ref"}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-800 text-xs">
+                        <div>
+                          <span className="text-slate-400 text-[10px] uppercase font-bold block">Method</span>
+                          <span className="font-extrabold text-slate-700 dark:text-slate-300">{payment.paymentMethod}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-slate-400 text-[10px] uppercase font-bold block">Amount Received</span>
+                          <span className="font-extrabold text-emerald-600 text-base">
+                            ₹{Number(payment.amount || 0).toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-2">
+                        <span
+                          className={`px-3 py-1 rounded-full text-[10px] font-extrabold border ${
+                            statusVal.toLowerCase() === "approved" || statusVal.toLowerCase() === "paid"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : statusVal.toLowerCase() === "rejected"
+                              ? "bg-rose-50 text-rose-700 border-rose-200"
+                              : "bg-amber-50 text-amber-700 border-amber-200"
+                          }`}
+                        >
+                          {statusVal}
+                        </span>
+
+                        {!isRetailer && statusVal.toLowerCase() === "pending" ? (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => updateStatus(payment._id, "Approved")}
+                              className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm min-h-[44px]"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => updateStatus(payment._id, "Rejected")}
+                              className="bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm min-h-[44px]"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400 font-semibold">Verified ✔</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>

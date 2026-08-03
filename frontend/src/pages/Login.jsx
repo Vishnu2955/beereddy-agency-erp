@@ -13,10 +13,12 @@ import {
 } from "react-icons/fa";
 import api from "../services/api";
 import { saveAuth } from "../utils/auth";
-import { errorToast, successToast } from "../utils/toast";
+import { FaDownload } from "react-icons/fa";
+import { usePwa } from "../context/PwaContext";
 
 function Login() {
   const navigate = useNavigate();
+  const { isInstallable, promptInstall } = usePwa();
 
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
@@ -54,16 +56,27 @@ function Login() {
         <div className="lg:col-span-7 p-8 lg:p-12 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800/80 text-white flex flex-col justify-between space-y-8 relative overflow-hidden">
           {/* Top Logo & Branding */}
           <div>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center text-2xl shadow-xl shadow-blue-500/30">
-                <FaShieldAlt />
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center text-2xl shadow-xl shadow-blue-500/30">
+                  <FaShieldAlt />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold tracking-widest text-blue-400 uppercase block">Distributor Management ERP</span>
+                  <h1 className="text-xl font-black tracking-tight text-white">
+                    BEEREDDY AGENCY
+                  </h1>
+                </div>
               </div>
-              <div>
-                <span className="text-[10px] font-extrabold tracking-widest text-blue-400 uppercase block">Distributor Management ERP</span>
-                <h1 className="text-xl font-black tracking-tight text-white">
-                  BEEREDDY AGENCY
-                </h1>
-              </div>
+
+              {isInstallable && (
+                <button
+                  onClick={promptInstall}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-lg flex items-center gap-1.5 transition active:scale-95 shrink-0"
+                >
+                  <FaDownload /> Install App
+                </button>
+              )}
             </div>
 
             {/* Headline Banner */}

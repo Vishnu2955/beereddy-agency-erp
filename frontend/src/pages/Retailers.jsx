@@ -14,9 +14,8 @@ import {
   errorToast,
 } from "../utils/toast";
 
-import {
-  confirmDelete,
-} from "../utils/confirm";
+import { confirmDelete } from "../utils/confirm";
+import SkeletonLoader from "../components/common/SkeletonLoader";
 
 export default function Retailers() {
 
@@ -241,25 +240,12 @@ export default function Retailers() {
           >
             + Add Retailer
           </button>
-
         </div>
-
       </div>
 
       {/* Loading */}
-
       {loading && (
-
-        <div className="bg-white rounded-xl shadow p-10 text-center">
-
-          <div className="animate-pulse text-blue-600 font-semibold">
-
-            Loading...
-
-          </div>
-
-        </div>
-
+        <SkeletonLoader type="table" count={5} />
       )}
 
       {/* Empty State */}

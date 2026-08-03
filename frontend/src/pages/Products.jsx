@@ -14,6 +14,7 @@ import { successToast, errorToast } from "../utils/toast";
 import { confirmDelete } from "../utils/confirm";
 
 import ProductMediaModal from "../components/products/ProductMediaModal";
+import SkeletonLoader from "../components/common/SkeletonLoader";
 
 export default function Products() {
   const currentUser = getUser();
@@ -187,11 +188,7 @@ export default function Products() {
 
       {/* Loading State */}
       {loading && (
-        <div className="bg-white rounded-2xl shadow p-12 text-center">
-          <div className="animate-pulse text-blue-600 font-semibold text-lg">
-            Loading product catalog...
-          </div>
-        </div>
+        <SkeletonLoader type="products" count={6} />
       )}
 
       {/* Empty State */}

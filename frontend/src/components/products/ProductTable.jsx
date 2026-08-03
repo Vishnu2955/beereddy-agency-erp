@@ -164,6 +164,133 @@ export default function ProductTable({
           </tbody>
         </table>
       </div>
+
+      {/* Mobile Responsive Cards View (Phones < 768px) */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {products.map((product) => {
+          const isLowStock = product.stock > 0 && product.stock <= (product.minStockLevel || 10);
+          const isOutOfStock = product.stock <= 0;
+
+          return (
+            <div
+              key={product._id}
+              className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  {product.mainImage || product.image ? (
+                    <img
+                      src={
+                        (product.mainImage || product.image).startsWith("http")
+                          ? product.mainImage || product.image
+                          : `${IMAGE_URL}${product.mainImage || product.image}`
+                      }
+                      alt={product.productName}
+                      className="w-14 h-14 rounded-xl object-contain border border-slate-200 bg-white p-1 shadow-xs"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                      <FaBoxOpen className="text-xl" />
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-sm">{product.productName}</h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                        {product.category || "General"}
+                      </span>
+                      {product.brand && (
+                        <span className="text-xs text-slate-400 font-medium">Brand: {product.brand}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <span
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border shrink-0 ${
+                    isOutOfStock
+                      ? "bg-rose-50 text-rose-700 border-rose-200"
+                      : isLowStock
+                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                      : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  }`}
+                >
+                  {isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : "In Stock"}
+                </span>
+              </div>
+
+              {/* Price & Stock Grid */}
+              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Selling Price</span>
+                  <span className="font-extrabold text-emerald-600 text-base">
+                    ₹{Number(product.sellingPrice || 0).toLocaleString("en-IN")}
+                  </span>
+                  {product.mrp > product.sellingPrice && (
+                    <span className="text-[10px] text-slate-400 line-through block">
+                      M.R.P: ₹{Number(product.mrp).toLocaleString("en-IN")}
+                    </span>
+                  )}
+                </div>
+
+                <div className="text-right">
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Available Stock</span>
+                  <span className="font-extrabold text-slate-800 dark:text-white text-base">
+                    {product.stock} {product.unit || "PCS"}
+                  </span>
+                  <span className="text-[10px] text-slate-400 block">GST: 18% Included</span>
+                </div>
+              </div>
+
+              {/* Mobile Action Buttons (Min height 48px thumb friendly) */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  onClick={() => onView3D && onView3D(product)}
+                  className="flex-1 min-h-[48px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 border border-indigo-200 active:scale-95 transition"
+                >
+                  <FaCube /> 360° / 3D
+                </button>
+
+                {role === "admin" && (
+                  <>
+                    <button
+                      onClick={() => onOpenMedia && onOpenMedia(product)}
+                      className="min-h-[48px] px-3.5 bg-purple-50 text-purple-700 font-bold text-xs rounded-xl flex items-center justify-center border border-purple-200 active:scale-95 transition"
+                      title="Media Manager"
+                    >
+                      <FaEye />
+                    </button>
+                    <button
+                      onClick={() => onEdit(product)}
+                      className="min-h-[48px] px-3.5 bg-blue-50 text-blue-700 font-bold text-xs rounded-xl flex items-center justify-center border border-blue-200 active:scale-95 transition"
+                      title="Edit Product"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => onDelete(product)}
+                      className="min-h-[48px] px-3.5 bg-rose-50 text-rose-700 font-bold text-xs rounded-xl flex items-center justify-center border border-rose-200 active:scale-95 transition"
+                      title="Delete Product"
+                    >
+                      <FaTrash />
+                    </button>
+                  </>
+                )}
+
+                {role === "retailer" && (
+                  <button
+                    onClick={() => onAddToCart(product)}
+                    disabled={isOutOfStock}
+                    className="flex-1 min-h-[48px] bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-md disabled:opacity-50 active:scale-95 transition"
+                  >
+                    <FaShoppingCart /> Add to Cart
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
