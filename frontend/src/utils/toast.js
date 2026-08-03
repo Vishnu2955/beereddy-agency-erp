@@ -12,6 +12,20 @@ export const errorToast = (message) => {
   });
 };
 
+export const warningToast = (message) => {
+  toast(message, {
+    icon: "⚠️",
+    duration: 4000,
+  });
+};
+
+export const infoToast = (message) => {
+  toast(message, {
+    icon: "ℹ️",
+    duration: 3000,
+  });
+};
+
 export const loadingToast = (message) => {
   return toast.loading(message);
 };

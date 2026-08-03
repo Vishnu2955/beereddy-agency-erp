@@ -10,10 +10,13 @@ import {
   FaWarehouse,
   FaTruck,
   FaLayerGroup,
+  FaEye,
+  FaEyeSlash,
+  FaDownload,
 } from "react-icons/fa";
 import api from "../services/api";
 import { saveAuth } from "../utils/auth";
-import { FaEye, FaEyeSlash, FaDownload } from "react-icons/fa";
+import { successToast, errorToast } from "../utils/toast";
 import { usePwa } from "../context/PwaContext";
 
 function Login() {
@@ -30,16 +33,35 @@ function Login() {
     e.preventDefault();
     try {
       setSubmitting(true);
+      console.log("Submitting login request for:", login);
       const res = await api.post("/auth/login", {
         login,
         password,
       });
 
-      saveAuth(res.data.token, res.data.user);
-      successToast("Signed in successfully!");
-      navigate("/dashboard");
+      console.log("Login response:", res.data);
+
+      if (res.data && res.data.success) {
+        const { token, user } = res.data;
+        saveAuth(token, user);
+        console.log("Token saved:", token);
+        console.log("User saved:", user);
+
+        const destination = "/dashboard";
+        console.log("Navigating to:", destination);
+
+        successToast("Signed in successfully!");
+        navigate(destination);
+      } else {
+        errorToast(res.data?.message || "Login failed. Please check credentials.");
+      }
     } catch (err) {
-      errorToast(err.response?.data?.message || "Invalid credentials. Please check and try again.");
+      console.error("Login error:", err);
+      const errorMsg =
+        err.response?.data?.message ||
+        err.message ||
+        "Invalid credentials. Please check and try again.";
+      errorToast(errorMsg);
     } finally {
       setSubmitting(false);
     }
