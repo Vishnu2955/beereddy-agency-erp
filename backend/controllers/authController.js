@@ -87,6 +87,7 @@ const registerUser = async (req, res) => {
     });
   }
 };
+
 // ==============================
 // Login User (Single Login Field)
 // Supports Email or Phone
@@ -247,6 +248,7 @@ const loginUser = async (req, res) => {
     });
   }
 };
+
 // ==============================
 // Send Email OTP
 // ==============================
@@ -304,6 +306,7 @@ const sendOtp = async (req, res) => {
     });
   }
 };
+
 // ==============================
 // Verify OTP
 // ==============================
@@ -315,27 +318,17 @@ const verifyOtp = async (req, res) => {
       email: email.toLowerCase(),
     });
 
-    console.log("Entered OTP:", JSON.stringify(otp));
-    console.log("Stored OTP :", JSON.stringify(user.otp));
-    console.log("Entered Type:", typeof otp);
-    console.log("Stored Type :", typeof user.otp);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-    console.log("Entered OTP:", JSON.stringify(otp));
-console.log("Stored OTP :", JSON.stringify(user.otp));
-console.log("Entered Type:", typeof otp);
-console.log("Stored Type :", typeof user.otp);
-
-if (!user.otp || String(user.otp).trim() !== String(otp).trim()) {
-  return res.status(400).json({
-    success: false,
-    message: "Invalid OTP",
-  });
-}
-
-    if (user.otpExpires < new Date()) {
+    if (!user.otp || String(user.otp).trim() !== String(otp).trim()) {
       return res.status(400).json({
         success: false,
-        message: "OTP has expired",
+        message: "Invalid OTP",
       });
     }
 
@@ -398,6 +391,19 @@ const resetPassword = async (req, res) => {
     user.otpExpires = null;
 
     await user.save();
+
+    res.json({
+      success: true,
+      message: "Password reset successfully",
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 
 // ==============================
 // Update Theme Preferences
