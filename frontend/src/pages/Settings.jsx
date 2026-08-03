@@ -867,6 +867,56 @@ export default function Settings() {
             </div>
           </form>
 
+          {/* STORAGE USAGE & CACHE DIAGNOSTICS */}
+          <div className="glass-panel p-6 rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 space-y-4 shadow-sm">
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-800 dark:text-white">Storage Diagnostics & Cache</h3>
+                <p className="text-[11px] text-slate-400">Local storage consumption and service worker cache control</p>
+              </div>
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    if ("caches" in window) {
+                      caches.keys().then((names) => {
+                        names.forEach((name) => caches.delete(name));
+                      });
+                    }
+                    alert("App local cache and storage cleared successfully!");
+                    window.location.reload();
+                  } catch (_) {}
+                }}
+                className="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-xl hover:bg-slate-700 transition"
+              >
+                Clear App Cache
+              </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
+              <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                <span className="text-[10px] text-slate-400 block font-bold">LOCAL STORAGE</span>
+                <strong className="text-slate-800 dark:text-white font-mono text-sm">
+                  {typeof window !== "undefined" ? Math.round((JSON.stringify(localStorage).length / 1024) * 10) / 10 : 0} KB
+                </strong>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                <span className="text-[10px] text-slate-400 block font-bold">ACTIVE THEME</span>
+                <strong className="text-slate-800 dark:text-white uppercase font-mono text-sm">{activeThemeId}</strong>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                <span className="text-[10px] text-slate-400 block font-bold">APP VERSION</span>
+                <strong className="text-slate-800 dark:text-white font-mono text-sm">v2.5.0-PROD</strong>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                <span className="text-[10px] text-slate-400 block font-bold">SERVICE WORKER</span>
+                <strong className="text-emerald-600 font-mono text-sm">
+                  {typeof window !== "undefined" && "serviceWorker" in navigator ? "Active" : "Disabled"}
+                </strong>
+              </div>
+            </div>
+          </div>
+
           {/* RESET ERP DANGER ZONE */}
           <div className="glass-panel p-6 rounded-2xl border border-red-300 bg-red-50/30 space-y-4">
             <div className="flex items-center gap-3 text-red-600 font-extrabold text-lg border-b border-red-200 pb-3">

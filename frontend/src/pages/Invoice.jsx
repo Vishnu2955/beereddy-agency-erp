@@ -9,12 +9,15 @@ import {
 
 import orderService from "../services/orderService";
 
+import InvoicePrint4 from "../components/invoices/InvoicePrint4";
+
 export default function Invoice() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState(null);
+  const [printMode, setPrintMode] = useState("standard"); // 'standard' | 'batch4'
 
   useEffect(() => {
     loadInvoice();
@@ -127,7 +130,7 @@ export default function Invoice() {
       <div className="max-w-4xl mx-auto px-3 print:px-0">
 
         {/* Action Buttons Header */}
-        <div className="flex justify-between items-center mb-4 print:hidden">
+        <div className="flex justify-between items-center mb-4 print:hidden flex-wrap gap-2">
           <button
             onClick={handleBack}
             className="flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-xl font-bold text-xs transition shadow-sm cursor-pointer"
@@ -136,17 +139,33 @@ export default function Invoice() {
             Back
           </button>
 
-          <button
-            onClick={printInvoice}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-bold text-xs transition shadow-md cursor-pointer"
-          >
-            <FaPrint />
-            Print Tax Invoice (A4 Fit)
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setPrintMode("batch4");
+                setTimeout(() => window.print(), 200);
+              }}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl font-bold text-xs transition shadow-md cursor-pointer"
+            >
+              <FaFileInvoice /> Print 4-in-1 (A4 Batch)
+            </button>
+            <button
+              onClick={() => {
+                setPrintMode("standard");
+                setTimeout(() => window.print(), 200);
+              }}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-bold text-xs transition shadow-md cursor-pointer"
+            >
+              <FaPrint /> Print Standard Invoice (A4)
+            </button>
+          </div>
         </div>
 
-        {/* Invoice Printable A4 Card */}
-        <div className="a4-print-card bg-white shadow-xl rounded-2xl p-6 sm:p-8 border border-slate-200 text-slate-800">
+        {printMode === "batch4" ? (
+          <InvoicePrint4 order={order} />
+        ) : (
+          /* Invoice Printable A4 Card */
+          <div className="a4-print-card bg-white shadow-xl rounded-2xl p-6 sm:p-8 border border-slate-200 text-slate-800">
 
           {/* Company Brand & Invoice Details Header */}
           <div className="flex justify-between items-start border-b border-slate-200 pb-3 gap-4">
@@ -405,9 +424,9 @@ export default function Invoice() {
               Beereddy Agency Helpdesk: +91 63020 39120 / +91 98765 43210
             </p>
           </div>
-
         </div>
-      </div>
+      )}
+    </div>
     </div>
   );
 }

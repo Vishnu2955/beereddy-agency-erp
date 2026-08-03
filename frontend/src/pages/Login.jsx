@@ -13,7 +13,7 @@ import {
 } from "react-icons/fa";
 import api from "../services/api";
 import { saveAuth } from "../utils/auth";
-import { FaDownload } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaDownload } from "react-icons/fa";
 import { usePwa } from "../context/PwaContext";
 
 function Login() {
@@ -22,6 +22,7 @@ function Login() {
 
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -190,13 +191,21 @@ function Login() {
               <div className="relative">
                 <FaLock className="absolute left-4 top-3.5 text-slate-500 text-sm" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••••••"
-                  className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-xl pl-11 pr-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-600 font-medium"
+                  className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-xl pl-11 pr-10 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-600 font-medium"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3.5 top-3.5 text-slate-500 hover:text-white transition"
+                  title={showPassword ? "Hide Password" : "Show Password"}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
               </div>
             </div>
 
