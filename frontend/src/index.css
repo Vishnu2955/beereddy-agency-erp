@@ -1,13 +1,25 @@
 @import "tailwindcss";
 
+:root {
+  --theme-primary: #0f172a;
+  --theme-accent: #2563eb;
+  --theme-bg: #f8fafc;
+  --theme-sidebar-bg: #0f172a;
+  --theme-card-bg: #ffffff;
+  --theme-navbar-bg: #ffffff;
+  --theme-border-radius: 12px;
+  --theme-text-color: #0f172a;
+}
+
 @layer base {
   body {
     margin: 0;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #f8fafc;
-    color: #0f172a;
+    background-color: var(--theme-bg, #f8fafc);
+    color: var(--theme-text-color, #0f172a);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 300ms ease, color 300ms ease;
   }
 }
 
@@ -30,17 +42,34 @@
   background: #94a3b8;
 }
 
-/* Custom Glassmorphism & UI Utilities */
+/* Custom Theme Glassmorphism & Dynamic UI Utilities */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: var(--theme-card-bg, rgba(255, 255, 255, 0.85));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: var(--theme-border-radius, 12px);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark-glass-panel {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(51, 65, 85, 0.5);
+  background: var(--theme-card-bg, rgba(15, 23, 42, 0.85));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(51, 65, 85, 0.4);
+  border-radius: var(--theme-border-radius, 12px);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.compact-ui {
+  font-size: 0.875rem;
+}
+.compact-ui .p-6 {
+  padding: 1rem !important;
+}
+.compact-ui .py-3 {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
 }
 
 /* Hide scrollbar utility */

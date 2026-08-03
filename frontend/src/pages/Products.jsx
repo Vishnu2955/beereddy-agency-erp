@@ -13,6 +13,8 @@ import { getUser } from "../utils/auth";
 import { successToast, errorToast } from "../utils/toast";
 import { confirmDelete } from "../utils/confirm";
 
+import ProductMediaModal from "../components/products/ProductMediaModal";
+
 export default function Products() {
   const currentUser = getUser();
   const isRetailer = currentUser?.role === "retailer";
@@ -25,6 +27,7 @@ export default function Products() {
   const [openModal, setOpenModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [mediaModalProduct, setMediaModalProduct] = useState(null);
 
   // 3D Viewer & Cart States
   const [selected3DProduct, setSelected3DProduct] = useState(null);
@@ -143,7 +146,7 @@ export default function Products() {
             <FaBoxOpen className="text-blue-600" /> Products Catalog
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            {isRetailer ? "Browse products, view in 3D, and add to cart to order" : "Manage inventory products and pricing"}
+            {isRetailer ? "Browse products, view 360° interactive view, and add to cart to order" : "Manage inventory products, 360° product media, and pricing"}
           </p>
         </div>
 
@@ -217,6 +220,7 @@ export default function Products() {
             onDelete={handleDeleteClick}
             onAddToCart={handleAddToCart}
             onView3D={handleView3D}
+            onOpenMedia={(p) => setMediaModalProduct(p)}
           />
         )
       )}
@@ -258,7 +262,19 @@ export default function Products() {
         />
       )}
 
-      {/* 3D Product Viewer Modal */}
+      {/* Admin Product Media & 360 Manager Modal */}
+      {mediaModalProduct && (
+        <ProductMediaModal
+          product={mediaModalProduct}
+          onClose={() => setMediaModalProduct(null)}
+          onUpdated={() => {
+            loadProducts();
+            setMediaModalProduct(null);
+          }}
+        />
+      )}
+
+      {/* 3D & 360 Product Viewer Modal */}
       <Product3DViewerModal
         product={selected3DProduct}
         isOpen={is3DOpen}

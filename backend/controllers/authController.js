@@ -399,22 +399,60 @@ const resetPassword = async (req, res) => {
 
     await user.save();
 
+// ==============================
+// Update Theme Preferences
+// ==============================
+const updateThemePreferences = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    const { themePreferences } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized." });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { themePreferences },
+      { new: true }
+    );
+
     res.json({
       success: true,
-      message: "Password changed successfully",
+      message: "Theme preferences updated successfully.",
+      themePreferences: user.themePreferences,
     });
-
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// ==============================
+// Get Theme Preferences
+// ==============================
+const getThemePreferences = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized." });
+    }
+
+    const user = await User.findById(userId).select("themePreferences");
+    res.json({
+      success: true,
+      themePreferences: user?.themePreferences || {},
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   sendOtp,
   verifyOtp,
   resetPassword,
+  updateThemePreferences,
+  getThemePreferences,
 };

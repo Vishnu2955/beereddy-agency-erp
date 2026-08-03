@@ -30,6 +30,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+const {
+  getCompanySettings,
+  updateCompanySettings,
+} = require("../controllers/companySettingsController");
+const { resetErp } = require("../controllers/adminController");
+
 // Public / Auth: Get current bank and QR details
 router.get("/payment-details", getPaymentSettings);
 
@@ -46,5 +52,12 @@ router.put(
 router.get("/whatsapp", verifyToken, isAdmin, getWhatsAppSettings);
 router.put("/whatsapp", verifyToken, isAdmin, updateWhatsAppSettings);
 router.post("/whatsapp/test", verifyToken, isAdmin, testWhatsAppNotification);
+
+// Company Settings Routes
+router.get("/company", getCompanySettings);
+router.put("/company", verifyToken, isAdmin, updateCompanySettings);
+
+// Reset ERP Route
+router.post("/reset-erp", verifyToken, isAdmin, resetErp);
 
 module.exports = router;

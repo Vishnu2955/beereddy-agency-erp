@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { FaTimes, FaSyncAlt, FaCube, FaShoppingCart, FaSearchPlus, FaSearchMinus } from "react-icons/fa";
+import { FaTimes, FaSyncAlt, FaCube, FaShoppingCart, FaSearchPlus, FaSearchMinus, FaFilePdf, FaVideo } from "react-icons/fa";
+import Product360Viewer from "./Product360Viewer";
 
-export default function Product3DViewerModal({ product, isOpen, onClose, onAddToCart }) {
+export default function Product360ViewerModal({ product, isOpen, onClose, onAddToCart }) {
   const canvasRef = useRef(null);
   const [rotationX, setRotationX] = useState(0.4);
   const [rotationY, setRotationY] = useState(0.6);
@@ -30,7 +31,7 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
 
   // Auto rotation animation loop
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || (product?.viewer360Images && product.viewer360Images.length > 0)) return;
 
     let animId;
     const render = () => {
@@ -42,11 +43,11 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
 
     animId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animId);
-  }, [isOpen, autoRotate, isDragging]);
+  }, [isOpen, autoRotate, isDragging, product]);
 
   // 3D Canvas Renderer
   useEffect(() => {
-    if (!isOpen || !canvasRef.current || !product) return;
+    if (!isOpen || !canvasRef.current || !product || (product.viewer360Images && product.viewer360Images.length > 0)) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -82,17 +83,14 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
     const sinY = Math.sin(rotationY);
 
     const projectedVertices = vertices.map(([x, y, z]) => {
-      // Rotate Y
       let x1 = x * cosY + z * sinY;
       let y1 = y;
       let z1 = -x * sinY + z * cosY;
 
-      // Rotate X
       let x2 = x1;
       let y2 = y1 * cosX - z1 * sinX;
       let z2 = y1 * sinX + z1 * cosX;
 
-      // Perspective projection
       const distance = 400;
       const fov = distance / (distance + z2);
 
@@ -104,7 +102,6 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
       };
     });
 
-    // 6 Faces defined by vertex indices
     const faces = [
       { indices: [0, 1, 2, 3], color: "#2563eb", name: "Back" },
       { indices: [4, 5, 6, 7], color: "#3b82f6", name: "Front" },
@@ -114,18 +111,14 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
       { indices: [1, 2, 6, 5], color: "#93c5fd", name: "Right" },
     ];
 
-    // Sort faces by average Z depth (painter's algorithm)
     faces.forEach((face) => {
       face.avgZ = face.indices.reduce((sum, idx) => sum + projectedVertices[idx].z, 0) / 4;
     });
 
     faces.sort((a, b) => b.avgZ - a.avgZ);
 
-    // Draw faces
     faces.forEach((face) => {
       const pts = face.indices.map((idx) => projectedVertices[idx]);
-
-      // Calculate normal vector for lighting shade
       const v0 = pts[0];
       const v1 = pts[1];
       const v2 = pts[2];
@@ -137,7 +130,6 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
 
       const crossZ = ax * by - ay * bx;
 
-      // Draw only front-facing faces (culling back faces)
       if (crossZ > 0) {
         ctx.beginPath();
         ctx.moveTo(pts[0].x, pts[0].y);
@@ -146,7 +138,6 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
         ctx.lineTo(pts[3].x, pts[3].y);
         ctx.closePath();
 
-        // Shading intensity based on angle
         const shade = Math.min(1, Math.max(0.3, Math.abs(face.avgZ / size) + 0.5));
         ctx.fillStyle = face.color;
         ctx.globalAlpha = shade;
@@ -157,7 +148,6 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Draw texture/image if front or back face
         if (imageTextureRef.current && (face.name === "Front" || face.name === "Right")) {
           ctx.save();
           ctx.beginPath();
@@ -168,7 +158,6 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
           ctx.closePath();
           ctx.clip();
 
-          // Approximate rendering of product thumbnail onto face center
           const minX = Math.min(...pts.map((p) => p.x));
           const maxX = Math.max(...pts.map((p) => p.x));
           const minY = Math.min(...pts.map((p) => p.y));
@@ -178,7 +167,6 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
           ctx.restore();
         }
 
-        // Add 3D Brand Label overlay
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 12px Inter, sans-serif";
         ctx.textAlign = "center";
@@ -211,66 +199,65 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
 
   if (!isOpen || !product) return null;
 
+  const has360Images = product.viewer360Images && product.viewer360Images.length > 0;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 text-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-3xl border border-slate-700 flex flex-col md:flex-row">
+      <div className="bg-slate-900 text-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-4xl border border-slate-700 flex flex-col md:flex-row max-h-[90vh]">
 
-        {/* 3D Canvas Area */}
-        <div className="relative flex-1 bg-slate-950 flex flex-col items-center justify-center p-4">
-          <div className="absolute top-4 left-4 bg-blue-600/80 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-2">
-            <FaCube className="animate-spin" /> Interactive 3D Model
-          </div>
+        {/* 3D Canvas Area / 360 Viewer */}
+        <div className="relative flex-1 bg-slate-950 flex flex-col items-center justify-center p-4 min-h-[380px]">
+          {has360Images ? (
+            <Product360Viewer
+              images={product.viewer360Images}
+              title={product.productName}
+              settings={product.viewer360Settings || {}}
+            />
+          ) : (
+            <>
+              <div className="absolute top-4 left-4 bg-blue-600/80 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-2">
+                <FaCube className="animate-spin" /> Interactive 3D Canvas Model
+              </div>
 
-          <canvas
-            ref={canvasRef}
-            width={380}
-            height={380}
-            className="cursor-grab active:cursor-grabbing rounded-xl shadow-inner border border-slate-800"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          />
+              <canvas
+                ref={canvasRef}
+                width={380}
+                height={380}
+                className="cursor-grab active:cursor-grabbing rounded-xl shadow-inner border border-slate-800"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              />
 
-          <p className="text-xs text-slate-400 mt-2">
-            Drag mouse to rotate 3D product preview
-          </p>
+              <p className="text-xs text-slate-400 mt-2">
+                Drag mouse to rotate 3D product preview
+              </p>
 
-          {/* 3D Controls */}
-          <div className="flex gap-3 mt-4">
-            <button
-              onClick={() => setAutoRotate(!autoRotate)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition ${
-                autoRotate ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-              }`}
-            >
-              <FaSyncAlt className={autoRotate ? "animate-spin" : ""} /> Auto Rotate
-            </button>
-            <button
-              onClick={() => setZoom((z) => Math.min(z + 0.2, 1.8))}
-              className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-xs text-slate-200"
-              title="Zoom In"
-            >
-              <FaSearchPlus />
-            </button>
-            <button
-              onClick={() => setZoom((z) => Math.max(z - 0.2, 0.6))}
-              className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-xs text-slate-200"
-              title="Zoom Out"
-            >
-              <FaSearchMinus />
-            </button>
-            <button
-              onClick={() => {
-                setRotationX(0.4);
-                setRotationY(0.6);
-                setZoom(1);
-              }}
-              className="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-xs text-slate-300"
-            >
-              Reset View
-            </button>
-          </div>
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => setAutoRotate(!autoRotate)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition ${
+                    autoRotate ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                  }`}
+                >
+                  <FaSyncAlt className={autoRotate ? "animate-spin" : ""} /> Auto Rotate
+                </button>
+                <button
+                  onClick={() => setZoom((z) => Math.min(z + 0.2, 1.8))}
+                  className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-xs text-slate-200"
+                >
+                  <FaSearchPlus />
+                </button>
+                <button
+                  onClick={() => setZoom((z) => Math.max(z - 0.2, 0.6))}
+                  className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg text-xs text-slate-200"
+                >
+                  <FaSearchMinus />
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Product Details Side Panel */}
@@ -322,6 +309,30 @@ export default function Product3DViewerModal({ product, isOpen, onClose, onAddTo
                 </p>
               </div>
             )}
+
+            {/* Video & Brochure Links */}
+            <div className="flex flex-col gap-2 mb-4">
+              {product.videoUrl && (
+                <a
+                  href={product.videoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs font-bold rounded-xl flex items-center gap-2"
+                >
+                  <FaVideo /> Watch Product Video
+                </a>
+              )}
+              {product.brochureUrl && (
+                <a
+                  href={product.brochureUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold rounded-xl flex items-center gap-2"
+                >
+                  <FaFilePdf /> Download PDF Brochure
+                </a>
+              )}
+            </div>
           </div>
 
           <div className="pt-4 border-t border-slate-800">

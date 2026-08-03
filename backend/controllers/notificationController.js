@@ -6,7 +6,7 @@ const { sendNotification, broadcastNotification } = require("../services/notific
 // ==========================================
 exports.getNotifications = async (req, res) => {
   try {
-    const query = {};
+    const query = { isArchived: { $ne: true } };
     if (req.user?.role === "retailer") {
       query.$or = [{ recipient: req.user.id }, { recipientType: "Retailer" }, { recipientType: "All" }];
     } else if (req.user?.role === "driver") {
@@ -27,7 +27,7 @@ exports.getNotifications = async (req, res) => {
 // ==========================================
 exports.getUnreadNotifications = async (req, res) => {
   try {
-    const query = { isRead: false };
+    const query = { isRead: false, isArchived: { $ne: true } };
     if (req.user?.role === "retailer") {
       query.$or = [{ recipient: req.user.id }, { recipientType: "Retailer" }, { recipientType: "All" }];
     } else {
@@ -78,17 +78,35 @@ exports.broadcastHandler = async (req, res) => {
 };
 
 // ==========================================
-// 5. PUT /api/notifications/read/:id
+// 5. PUT /api/notifications/read/:id (Mark as Seen / Auto-Archive on 2nd View)
 // ==========================================
 exports.markAsRead = async (req, res) => {
   try {
+    const existing = await Notification.findById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: "Notification not found." });
+    }
+
+    const newViewCount = (existing.viewCount || 0) + 1;
+    const isArchived = newViewCount >= 2;
+
     const notif = await Notification.findByIdAndUpdate(
       req.params.id,
-      { isRead: true, readAt: new Date(), status: "Read" },
+      {
+        isRead: true,
+        readAt: existing.readAt || new Date(),
+        status: "Read",
+        viewCount: newViewCount,
+        isArchived: isArchived,
+      },
       { new: true }
     );
 
-    res.json({ success: true, message: "Marked as read.", notification: notif });
+    res.json({
+      success: true,
+      message: isArchived ? "Notification viewed 2nd time & archived." : "Notification marked as seen.",
+      notification: notif,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

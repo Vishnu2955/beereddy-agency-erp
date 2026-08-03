@@ -70,27 +70,38 @@ const placeOrder = async (req, res) => {
     const orderNumber = `ORD-${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 100)}`;
     const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
 
-    const order = await Order.create({
-      retailer: req.user.id,
-      orderNumber,
-      invoiceNumber,
-      items: orderItems,
-      totalAmount,
-      gstAmount: computedGst,
-      finalAmount,
-      remainingBalance: finalAmount,
-      deliveryAddress: req.body.deliveryAddress || "Retailer Store Address",
-      paymentMethod: paymentMethod || "Cash on Delivery",
-      discount,
-      remarks,
-      paymentStatus: req.body.paymentStatus || "Pending",
-      orderStatus: "Pending",
-      status: "Pending",
-    });
+    // STEP 1: Perform Atomic Stock Deduction BEFORE creating order
+    // If stock is insufficient or product inactive, deductStockForApprovedOrder will throw an error & abort.
+    await deductStockForApprovedOrder(orderItems, req.user?.id, orderNumber);
 
-    // Automatically deduct stock and update inventory in real-time when retailer places order
-    await deductStockForApprovedOrder(order.items, req.user?.id, order.orderNumber);
-    order.isStockDeducted = true;
+    let order;
+    try {
+      // STEP 2: Create Order with isStockDeducted set to TRUE
+      order = await Order.create({
+        retailer: req.user.id,
+        orderNumber,
+        invoiceNumber,
+        items: orderItems,
+        totalAmount,
+        gstAmount: computedGst,
+        finalAmount,
+        remainingBalance: finalAmount,
+        deliveryAddress: req.body.deliveryAddress || "Retailer Store Address",
+        paymentMethod: paymentMethod || "Cash on Delivery",
+        discount,
+        remarks,
+        paymentStatus: req.body.paymentStatus || "Pending",
+        orderStatus: "Pending",
+        status: "Pending",
+        isStockDeducted: true,
+      });
+    } catch (orderCreateErr) {
+      // STEP 3: Rollback stock deduction if order document creation fails
+      console.error(`[ORDER CREATION FAILED] Rolling back stock for order ${orderNumber}:`, orderCreateErr);
+      await restoreStockForCancelledOrder(orderItems, req.user?.id, orderNumber);
+      throw orderCreateErr;
+    }
+
     // Fetch fresh user object from DB to ensure shopName, fullName, and phone are accurate
     let currentUserObj = req.user;
     try {
@@ -107,7 +118,7 @@ const placeOrder = async (req, res) => {
       const Notification = require("../models/Notification");
       await Notification.create({
         title: `New Order Placed (${order.orderNumber})`,
-        message: `Order ${order.orderNumber} placed by ${retailerDisplayName} for ₹${totalAmount.toLocaleString('en-IN')}`,
+        message: `Order ${order.orderNumber} placed by ${retailerDisplayName} for ₹${finalAmount.toLocaleString('en-IN')}`,
         recipientType: "Admin",
         channel: "In-App",
         priority: "High",
@@ -136,9 +147,9 @@ const placeOrder = async (req, res) => {
   } catch (error) {
     console.error("Place Order Error:", error);
 
-    res.status(500).json({
+    res.status(400).json({
       success: false,
-      message: error.message || "Server Error while placing order.",
+      message: error.message || "Failed to place order.",
     });
   }
 };

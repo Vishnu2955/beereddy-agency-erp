@@ -99,6 +99,19 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    themePreferences: {
+      type: Object,
+      default: {
+        activeTheme: "beereddy-executive",
+        mode: "light",
+        compactMode: false,
+        customColors: {},
+        wallpaperSettings: {},
+        favoriteThemes: [],
+        recentlyUsed: [],
+      },
+    },
   },
   {
     timestamps: true,

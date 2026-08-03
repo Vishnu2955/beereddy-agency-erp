@@ -75,9 +75,45 @@ const productSchema = new mongoose.Schema(
       default: "",
     },
 
-    image3d: {
+    mainImage: {
       type: String,
       default: "",
+    },
+
+    galleryImages: {
+      type: [String],
+      default: [],
+    },
+
+    viewer360Images: {
+      type: [String],
+      default: [],
+    },
+
+    videoUrl: {
+      type: String,
+      default: "",
+    },
+
+    brochureUrl: {
+      type: String,
+      default: "",
+    },
+
+    model3dUrl: {
+      type: String,
+      default: "",
+    },
+
+    viewer360Settings: {
+      type: Object,
+      default: {
+        enabled: true,
+        autoRotate: true,
+        rotationSpeed: 3,
+        zoomMin: 1,
+        zoomMax: 4,
+      },
     },
 
     description: {

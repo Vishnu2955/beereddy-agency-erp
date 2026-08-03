@@ -49,6 +49,14 @@ const notificationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    viewCount: {
+      type: Number,
+      default: 0,
+    },
+    isArchived: {
+      type: Boolean,
+      default: false,
+    },
     readAt: {
       type: Date,
       default: null,

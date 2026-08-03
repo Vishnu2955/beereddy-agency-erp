@@ -114,13 +114,21 @@ export default function ProductTable({
                       <button
                         onClick={() => onView3D && onView3D(product)}
                         className="bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 transition w-8 h-8 rounded-xl flex items-center justify-center border border-indigo-200 shadow-2xs"
-                        title="3D Interactive Model"
+                        title="360° / 3D Interactive Viewer"
                       >
                         <FaCube className="text-sm" />
                       </button>
 
                       {role === "admin" && (
                         <>
+                          <button
+                            onClick={() => onOpenMedia && onOpenMedia(product)}
+                            className="bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-600 transition w-8 h-8 rounded-xl flex items-center justify-center border border-purple-200 shadow-2xs"
+                            title="Product Media & 360° Manager"
+                          >
+                            <FaEye className="text-sm" />
+                          </button>
+
                           <button
                             onClick={() => onEdit(product)}
                             className="bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 transition w-8 h-8 rounded-xl flex items-center justify-center border border-blue-200 shadow-2xs"

@@ -6,16 +6,13 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import App from "./App";
 import "./index.css";
+import { ThemeProvider } from "./context/ThemeContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-
-    <Toaster
-      position="top-right"
-      reverseOrder={false}
-    />
-
-    <App />
-
+    <ThemeProvider>
+      <Toaster position="top-right" reverseOrder={false} />
+      <App />
+    </ThemeProvider>
   </React.StrictMode>
 );
