@@ -1,5 +1,5 @@
-const CACHE_VERSION = "v5-prod";
-const CACHE_NAME = `beereddy-erp-${CACHE_VERSION}`;
+﻿const CACHE_VERSION = "v5-prod";
+const APP_CACHE = `beereddy-app-shell-${CACHE_VERSION}`;
 const STATIC_CACHE = `beereddy-static-${CACHE_VERSION}`;
 const API_CACHE = `beereddy-api-${CACHE_VERSION}`;
 
@@ -26,18 +26,49 @@ const PRECACHE_ASSETS = [
   "/icons/maskable-icon-512x512.png",
 ];
 
-// Install Event - Pre-cache App Shell & Assets, immediately skip waiting
+const navigationRoute = (request) => {
+  return request.mode === "navigate" || request.headers.get("accept")?.includes("text/html");
+};
+
+const networkFirst = async (request, cacheName = STATIC_CACHE) => {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) return cachedResponse;
+    if (navigationRoute(request)) {
+      return caches.match("/index.html");
+    }
+    throw error;
+  }
+};
+
+const cacheFirst = async (request, cacheName = STATIC_CACHE) => {
+  const cachedResponse = await caches.match(request);
+  if (cachedResponse) return cachedResponse;
+  const response = await fetch(request);
+  if (response.ok && response.type === "basic") {
+    const cache = await caches.open(cacheName);
+    cache.put(request, response.clone());
+  }
+  return response;
+};
+
 self.addEventListener("install", (event) => {
   console.log(`[PWA Service Worker ${CACHE_VERSION}] Installing & precaching assets`);
   event.waitUntil(
     caches
-      .open(STATIC_CACHE)
+      .open(APP_CACHE)
       .then((cache) => cache.addAll(PRECACHE_ASSETS))
       .then(() => self.skipWaiting())
   );
 });
 
-// Activate Event - Immediately purge obsolete caches & claim active clients
 self.addEventListener("activate", (event) => {
   console.log(`[PWA Service Worker ${CACHE_VERSION}] Activating & purging old caches`);
   event.waitUntil(
@@ -45,10 +76,10 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((cacheNames) => {
         return Promise.all(
-          cacheNames.map((cache) => {
-            if (cache !== STATIC_CACHE && cache !== API_CACHE && cache !== CACHE_NAME) {
-              console.log(`[PWA SW ${CACHE_VERSION}] Deleting stale cache:`, cache);
-              return caches.delete(cache);
+          cacheNames.map((cacheName) => {
+            if (![APP_CACHE, STATIC_CACHE, API_CACHE].includes(cacheName)) {
+              console.log(`[PWA SW ${CACHE_VERSION}] Deleting stale cache:`, cacheName);
+              return caches.delete(cacheName);
             }
           })
         );
@@ -57,78 +88,58 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Message Listener for immediate SW update activation
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });
 
-// Fetch Event - High-Performance SPA Caching & Instant Navigation Fallback
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Ignore non-GET requests
   if (request.method !== "GET") return;
 
-  // 1. SPA Navigation Requests (Android PWA Instant Navigation Fix)
-  // For HTML navigation (mode === 'navigate' or accept: text/html), serve the precached /index.html app shell
-  if (request.mode === "navigate" || (request.headers.get("accept") || "").includes("text/html")) {
+  if (url.pathname.startsWith("/api")) {
     event.respondWith(
-      caches.match("/index.html").then((cachedIndex) => {
-        if (cachedIndex) {
-          return cachedIndex;
-        }
-        return fetch("/index.html").catch(() => {
-          return caches.match("/");
-        });
+      networkFirst(request, API_CACHE).catch(() =>
+        new Response(
+          JSON.stringify({
+            success: false,
+            offline: true,
+            message: "You are currently offline. Showing cached system data.",
+          }),
+          { headers: { "Content-Type": "application/json" } }
+        )
+      )
+    );
+    return;
+  }
+
+  if (navigationRoute(request)) {
+    event.respondWith(
+      networkFirst(request, APP_CACHE).catch(async () => {
+        const cached = await caches.match("/index.html");
+        return cached || new Response("", { status: 503, statusText: "Service Unavailable" });
       })
     );
     return;
   }
 
-  // 2. API Requests -> Network Only (Never serve stale API responses from SW cache)
-  if (url.pathname.startsWith("/api/")) {
+  if (["script", "style", "font", "image", "worker"].includes(request.destination)) {
+    event.respondWith(cacheFirst(request));
     return;
   }
 
-  // 3. Vite Build Assets (/assets/*) -> Cache First, Network Fallback
-  if (url.pathname.includes("/assets/")) {
-    event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) return cachedResponse;
-        return fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseClone = networkResponse.clone();
-            caches.open(STATIC_CACHE).then((cache) => cache.put(request, responseClone));
-          }
-          return networkResponse;
-        });
-      })
-    );
-    return;
-  }
-
-  // 4. Other Static Resources (images, icons, fonts) -> Stale-While-Revalidate
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      const fetchPromise = fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
-            const responseClone = networkResponse.clone();
-            caches.open(STATIC_CACHE).then((cache) => cache.put(request, responseClone));
-          }
-          return networkResponse;
-        })
-        .catch(() => cachedResponse);
-
-      return cachedResponse || fetchPromise;
+    cacheFirst(request).catch(async () => {
+      if (navigationRoute(request)) {
+        return caches.match("/index.html");
+      }
     })
   );
 });
 
-// Push Notifications Handler
 self.addEventListener("push", (event) => {
   if (!event.data) return;
   try {
