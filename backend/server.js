@@ -46,6 +46,7 @@ const securityRoutes = require("./routes/securityRoutes");
 const backupRoutes = require("./routes/backupRoutes");
 const systemRoutes = require("./routes/systemRoutes");
 const diagnosticsRoutes = require("./routes/diagnosticsRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 
 // Custom Middleware
 const { setSecurityHeaders, sanitizeInput } = require("./middleware/securityMiddleware");
@@ -209,6 +210,7 @@ app.use("/api/security", securityRoutes);
 app.use("/api/backup", backupRoutes);
 app.use("/api/system", systemRoutes);
 app.use("/api/diagnostics", diagnosticsRoutes);
+app.use("/api/categories", categoryRoutes);
 
 // Global Centralized Error Catcher & Bug Reporting Middleware
 app.use(async (err, req, res, next) => {

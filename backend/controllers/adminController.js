@@ -8,6 +8,16 @@ const StockHistory = require("../models/StockHistory");
 const Notification = require("../models/Notification");
 const ProductReturn = require("../models/ProductReturn");
 const Delivery = require("../models/Delivery");
+const AuditLog = require("../models/AuditLog");
+const BugReport = require("../models/BugReport");
+const Complaint = require("../models/Complaint");
+const Contact = require("../models/Contact");
+const Driver = require("../models/Driver");
+const FollowUp = require("../models/FollowUp");
+const Lead = require("../models/Lead");
+const Ticket = require("../models/Ticket");
+const Vehicle = require("../models/Vehicle");
+const Warehouse = require("../models/Warehouse");
 const bcrypt = require("bcrypt");
 
 // Reset ERP (Admin Only)
@@ -36,23 +46,35 @@ const resetErp = async (req, res) => {
 
     console.warn(`[ERP RESET INITIATED] Admin ${adminUser.fullName} (${adminUser.phone}) triggered full ERP reset.`);
 
-    // 1. Delete Operational Documents
-    await Order.deleteMany({});
-    await Invoice.deleteMany({});
-    await Payment.deleteMany({});
-    await StockHistory.deleteMany({});
-    await Inventory.deleteMany({});
-    await ProductReturn.deleteMany({});
-    await Delivery.deleteMany({});
-    await Notification.deleteMany({});
-    await Product.deleteMany({});
+    // 1. Purge all transactional & master data collections
+    await Promise.all([
+      Order.deleteMany({}),
+      Invoice.deleteMany({}),
+      Payment.deleteMany({}),
+      Product.deleteMany({}),
+      Inventory.deleteMany({}),
+      StockHistory.deleteMany({}),
+      AuditLog.deleteMany({}),
+      Notification.deleteMany({}),
+      ProductReturn.deleteMany({}),
+      Delivery.deleteMany({}),
+      Driver.deleteMany({}),
+      Vehicle.deleteMany({}),
+      Warehouse.deleteMany({}),
+      Ticket.deleteMany({}),
+      Lead.deleteMany({}),
+      FollowUp.deleteMany({}),
+      Complaint.deleteMany({}),
+      BugReport.deleteMany({}),
+      Contact.deleteMany({}),
+    ]);
 
-    // 2. Delete Retailer Users (Keep Admin users)
-    await User.deleteMany({ role: "retailer" });
+    // 2. Delete Non-Admin Users (Keep Admin users intact)
+    await User.deleteMany({ role: { $ne: "admin" } });
 
     res.json({
       success: true,
-      message: "ERP successfully reset as NEW. All transactional data, products, and retailer records cleared. Admin account and system settings preserved.",
+      message: "ERP successfully reset as NEW. All transactional data, products, and non-admin user records cleared. Admin account and system settings preserved.",
       resetStats: {
         orders: 0,
         products: 0,

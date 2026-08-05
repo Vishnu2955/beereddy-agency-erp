@@ -15,7 +15,7 @@ const createBackup = async (req, res) => {
     const collections = await mongoose.connection.db.listCollections().toArray();
     const backupData = {
       system: "Beereddy Agency ERP",
-      version: "1.0.0",
+      version: "2.0.0",
       createdAt: new Date().toISOString(),
       createdBy: req.user?.email || "Admin",
       data: {},
@@ -34,7 +34,6 @@ const createBackup = async (req, res) => {
 
     const stats = fs.statSync(filePath);
 
-    // Record Audit Log
     try {
       await AuditLog.create({
         user: req.user?.id || null,
@@ -49,10 +48,11 @@ const createBackup = async (req, res) => {
 
     res.json({
       success: true,
-      message: "✅ Encrypted database backup created successfully!",
+      message: "✅ Database backup created successfully!",
       filename,
       sizeBytes: stats.size,
       createdAt: backupData.createdAt,
+      backupData,
     });
   } catch (error) {
     console.error("Create Backup Error:", error);
@@ -60,6 +60,22 @@ const createBackup = async (req, res) => {
       success: false,
       message: error.message || "Failed to create database backup.",
     });
+  }
+};
+
+// Download Backup File
+const downloadBackup = async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const filePath = path.join(BACKUP_DIR, path.basename(filename));
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: "Backup file not found" });
+    }
+
+    res.download(filePath, filename);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -139,7 +155,6 @@ const restoreBackup = async (req, res) => {
       }
     }
 
-    // Record Audit Log
     try {
       await AuditLog.create({
         user: req.user?.id || null,
@@ -165,8 +180,45 @@ const restoreBackup = async (req, res) => {
   }
 };
 
+// Upload & Import Backup File Directly
+const uploadAndRestoreBackup = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "JSON backup file is required." });
+    }
+
+    const rawContent = fs.readFileSync(req.file.path, "utf8");
+    let backupObj;
+    try {
+      backupObj = JSON.parse(rawContent);
+    } catch (e) {
+      return res.status(400).json({ success: false, message: "Invalid JSON format in uploaded file." });
+    }
+
+    if (!backupObj || !backupObj.data) {
+      return res.status(400).json({ success: false, message: "Invalid ERP backup structure. Missing data object." });
+    }
+
+    for (const [colName, docs] of Object.entries(backupObj.data)) {
+      if (Array.isArray(docs) && docs.length > 0) {
+        await mongoose.connection.db.collection(colName).deleteMany({});
+        await mongoose.connection.db.collection(colName).insertMany(docs);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "✅ ERP Database restored successfully from uploaded JSON backup file!",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   createBackup,
   getBackups,
+  downloadBackup,
   restoreBackup,
+  uploadAndRestoreBackup,
 };

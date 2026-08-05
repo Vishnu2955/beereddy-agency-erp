@@ -1,12 +1,17 @@
-const CACHE_NAME = "beereddy-erp-v3";
-const STATIC_CACHE = "beereddy-static-v3";
-const API_CACHE = "beereddy-api-v3";
+const CACHE_VERSION = "v5-prod";
+const CACHE_NAME = `beereddy-erp-${CACHE_VERSION}`;
+const STATIC_CACHE = `beereddy-static-${CACHE_VERSION}`;
+const API_CACHE = `beereddy-api-${CACHE_VERSION}`;
 
 const PRECACHE_ASSETS = [
   "/",
   "/index.html",
   "/manifest.json",
   "/favicon.svg",
+  "/favicon.png",
+  "/favicon-32x32.png",
+  "/favicon-16x16.png",
+  "/apple-touch-icon.png",
   "/icon-192.png",
   "/icon-512.png",
   "/icons/icon-72x72.png",
@@ -17,23 +22,24 @@ const PRECACHE_ASSETS = [
   "/icons/icon-192x192.png",
   "/icons/icon-384x384.png",
   "/icons/icon-512x512.png",
+  "/icons/maskable-icon-192x192.png",
+  "/icons/maskable-icon-512x512.png",
 ];
 
-// Install Event - Pre-cache Static Assets
+// Install Event - Pre-cache App Shell & Assets, immediately skip waiting
 self.addEventListener("install", (event) => {
+  console.log(`[PWA Service Worker ${CACHE_VERSION}] Installing & precaching assets`);
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
-      .then((cache) => {
-        console.log("[PWA Service Worker] Pre-caching Core App Shell & Assets");
-        return cache.addAll(PRECACHE_ASSETS);
-      })
+      .then((cache) => cache.addAll(PRECACHE_ASSETS))
       .then(() => self.skipWaiting())
   );
 });
 
-// Activate Event - Clean Up Obsolete Caches
+// Activate Event - Immediately purge obsolete caches & claim active clients
 self.addEventListener("activate", (event) => {
+  console.log(`[PWA Service Worker ${CACHE_VERSION}] Activating & purging old caches`);
   event.waitUntil(
     caches
       .keys()
@@ -41,7 +47,7 @@ self.addEventListener("activate", (event) => {
         return Promise.all(
           cacheNames.map((cache) => {
             if (cache !== STATIC_CACHE && cache !== API_CACHE && cache !== CACHE_NAME) {
-              console.log("[PWA Service Worker] Purging Obsolete Cache:", cache);
+              console.log(`[PWA SW ${CACHE_VERSION}] Deleting stale cache:`, cache);
               return caches.delete(cache);
             }
           })
@@ -51,72 +57,86 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Fetch Event - Dynamic Caching Strategy
+// Message Listener for immediate SW update activation
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
+// Fetch Event - High-Performance SPA Caching & Instant Navigation Fallback
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
+  // Ignore non-GET requests
   if (request.method !== "GET") return;
 
-  // Strategy A: API Requests -> Network First with Offline JSON Cache Fallback
-  if (url.pathname.startsWith("/api")) {
+  // 1. SPA Navigation Requests (Android PWA Instant Navigation Fix)
+  // For HTML navigation (mode === 'navigate' or accept: text/html), serve the precached /index.html app shell
+  if (request.mode === "navigate" || (request.headers.get("accept") || "").includes("text/html")) {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(API_CACHE).then((cache) => cache.put(request, responseClone));
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) return cachedResponse;
-            return new Response(
-              JSON.stringify({
-                success: false,
-                offline: true,
-                message: "Offline mode active. Displaying cached data.",
-              }),
-              { headers: { "Content-Type": "application/json" } }
-            );
-          });
-        })
+      caches.match("/index.html").then((cachedIndex) => {
+        if (cachedIndex) {
+          return cachedIndex;
+        }
+        return fetch("/index.html").catch(() => {
+          return caches.match("/");
+        });
+      })
     );
     return;
   }
 
-  // Strategy B: Static Assets & Pages -> Cache First with Network Fallback
+  // 2. API Requests -> Network Only (Never serve stale API responses from SW cache)
+  if (url.pathname.startsWith("/api/")) {
+    return;
+  }
+
+  // 3. Vite Build Assets (/assets/*) -> Cache First, Network Fallback
+  if (url.pathname.includes("/assets/")) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        return fetch(request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put(request, responseClone));
+          }
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // 4. Other Static Resources (images, icons, fonts) -> Stale-While-Revalidate
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
-          const responseClone = networkResponse.clone();
-          caches.open(STATIC_CACHE).then((cache) => cache.put(request, responseClone));
-        }
-        return networkResponse;
-      });
-    }).catch(() => {
-      // Offline SPA Fallback for Navigation HTML Requests
-      if (request.headers.get("accept")?.includes("text/html")) {
-        return caches.match("/index.html");
-      }
+      const fetchPromise = fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
+            const responseClone = networkResponse.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put(request, responseClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => cachedResponse);
+
+      return cachedResponse || fetchPromise;
     })
   );
 });
 
-// Push Notifications Architecture
+// Push Notifications Handler
 self.addEventListener("push", (event) => {
   if (!event.data) return;
   try {
     const data = event.data.json();
     const options = {
       body: data.body || "New update from Beereddy Agency ERP",
-      icon: "/icons/icon-192x192.png",
-      badge: "/icons/icon-192x192.png",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
       vibrate: [100, 50, 100],
       data: { url: data.url || "/dashboard" },
     };

@@ -15,12 +15,13 @@ import {
   FaDownload,
 } from "react-icons/fa";
 import api from "../services/api";
-import { saveAuth } from "../utils/auth";
+import { useAuth } from "../context/AuthContext";
 import { successToast, errorToast } from "../utils/toast";
 import { usePwa } from "../context/PwaContext";
 
 function Login() {
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth();
   const { isInstallable, promptInstall } = usePwa();
 
   const [login, setLogin] = useState("");
@@ -39,19 +40,20 @@ function Login() {
         password,
       });
 
-      console.log("Login response:", res.data);
+      console.log("Login API Response:", res.data);
 
       if (res.data && res.data.success) {
         const { token, user } = res.data;
-        saveAuth(token, user);
-        console.log("Token saved:", token);
-        console.log("User saved:", user);
 
-        const destination = "/dashboard";
-        console.log("Navigating to:", destination);
+        // Step 4: Call AuthContext login() to update localStorage and state synchronously
+        authLogin(token, user);
+
+        console.log("Token after save:", localStorage.getItem("token"));
+        console.log("User after save:", localStorage.getItem("user"));
+        console.log("Navigating to dashboard...");
 
         successToast("Signed in successfully!");
-        navigate(destination);
+        navigate("/dashboard", { replace: true });
       } else {
         errorToast(res.data?.message || "Login failed. Please check credentials.");
       }

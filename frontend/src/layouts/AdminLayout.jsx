@@ -8,9 +8,29 @@ import InstallPWAPrompt from "../components/common/InstallPWAPrompt";
 import GlobalSearchModal from "../components/common/GlobalSearchModal";
 import FloatingActionButton from "../components/common/FloatingActionButton";
 
+import SetupWizardModal from "../components/common/SetupWizardModal";
+import api from "../services/api";
+import { getUser } from "../utils/auth";
+
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
+
+  const currentUser = getUser();
+  const isAdmin = currentUser?.role === "admin";
+
+  // Check if first-time setup wizard needs to launch
+  useEffect(() => {
+    if (!isAdmin) return;
+    api.get("/settings/company")
+      .then((res) => {
+        if (res.data.success && res.data.settings && res.data.settings.isSetupCompleted === false) {
+          setShowSetupWizard(true);
+        }
+      })
+      .catch((_) => {});
+  }, [isAdmin]);
 
   // Global Keyboard Shortcut: Ctrl + K or Cmd + K or /
   useEffect(() => {
@@ -42,6 +62,13 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* First-Time Setup Wizard Modal */}
+      <SetupWizardModal
+        isOpen={showSetupWizard}
+        onClose={() => setShowSetupWizard(false)}
+        onComplete={() => setShowSetupWizard(false)}
+      />
 
       {/* Global Enterprise Search Modal */}
       <GlobalSearchModal

@@ -277,70 +277,92 @@ export default function Dashboard() {
       </div>
 
       {/* Admin KPI Stat Cards */}
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Today's Sales"
+          value={`₹${(dashboard.todaySales || 0).toLocaleString("en-IN")}`}
+          icon={<FaMoneyBillWave />}
+          trend={dashboard.todaySales > 0 ? "Daily Active" : "₹0 Today"}
+          trendUp={dashboard.todaySales > 0}
+          color="from-blue-600 to-indigo-700"
+          subtitle="Orders placed today"
+          onClick={() => navigate("/orders")}
+        />
+
+        <StatCard
+          title="Monthly Sales"
+          value={`₹${(dashboard.monthlySales || 0).toLocaleString("en-IN")}`}
+          icon={<FaChartLine />}
+          trend={dashboard.monthlySales > 0 ? "Month Active" : "₹0 Month"}
+          trendUp={dashboard.monthlySales > 0}
+          color="from-indigo-600 to-purple-700"
+          subtitle="Current month turnover"
+          onClick={() => navigate("/reports")}
+        />
+
+        <StatCard
+          title="Outstanding Credit"
+          value={`₹${(dashboard.outstandingAmount || 0).toLocaleString("en-IN")}`}
+          icon={<FaExclamationTriangle />}
+          trend={dashboard.outstandingAmount > 0 ? "Collection Due" : "Clean Account"}
+          trendUp={dashboard.outstandingAmount === 0}
+          color="from-rose-600 to-red-700"
+          subtitle="Total unpaid dues"
+          onClick={() => navigate("/outstanding")}
+        />
+
+        <StatCard
+          title="Pending Payments"
+          value={dashboard.pendingPayments || 0}
+          icon={<FaClock />}
+          trend={dashboard.pendingPayments > 0 ? "Action Needed" : "Zero Pending"}
+          trendUp={dashboard.pendingPayments === 0}
+          color="from-amber-500 to-orange-600"
+          subtitle="Unsettled invoices"
+          onClick={() => navigate("/payments")}
+        />
+
         <StatCard
           title="Catalog Products"
-          value={dashboard.totalProducts}
+          value={dashboard.totalProducts || 0}
           icon={<FaBoxOpen />}
-          trend="+8 Active"
-          trendUp={true}
-          color="from-blue-600 to-indigo-700"
-          subtitle="Listed in inventory"
+          trend={dashboard.totalProducts > 0 ? `+${dashboard.totalProducts} Items` : "No Items"}
+          trendUp={dashboard.totalProducts > 0}
+          color="from-emerald-600 to-teal-700"
+          subtitle="Listed in catalog"
           onClick={() => navigate("/products")}
         />
 
         <StatCard
-          title="Registered Retailers"
-          value={dashboard.totalRetailers}
+          title="Total Retailers"
+          value={dashboard.totalRetailers || 0}
           icon={<FaStore />}
-          trend="+14% MoM"
-          trendUp={true}
-          color="from-emerald-600 to-teal-700"
-          subtitle="Verified agency accounts"
+          trend={dashboard.totalRetailers > 0 ? `+${dashboard.totalRetailers} Partners` : "No Partners"}
+          trendUp={dashboard.totalRetailers > 0}
+          color="from-cyan-600 to-blue-700"
+          subtitle="Verified network accounts"
           onClick={() => navigate("/retailers")}
         />
 
         <StatCard
-          title="Total Network Orders"
-          value={dashboard.totalOrders}
-          icon={<FaClipboardList />}
-          trend="+22.4% MoM"
+          title="Total Customers"
+          value={dashboard.totalCustomers || dashboard.totalRetailers || 0}
+          icon={<FaShieldAlt />}
+          trend="Registered Base"
           trendUp={true}
-          color="from-orange-500 to-amber-600"
-          subtitle="Fulfilled & active orders"
-          onClick={() => navigate("/orders")}
+          color="from-violet-600 to-indigo-800"
+          subtitle="Registered buyer accounts"
+          onClick={() => navigate("/retailers")}
         />
 
         <StatCard
-          title="Total Agency Sales Revenue"
-          value={`₹${(dashboard.totalSales || 0).toLocaleString("en-IN")}`}
-          icon={<FaMoneyBillWave />}
-          trend="+18.5% YTD"
-          trendUp={true}
-          color="from-purple-600 to-indigo-800"
-          subtitle="Gross sales turnover"
-          onClick={() => navigate("/invoices")}
-        />
-
-        <StatCard
-          title="Pending Order Approvals"
-          value={dashboard.pendingOrders}
-          icon={<FaClock />}
-          trend={dashboard.pendingOrders > 0 ? "Action Required" : "All cleared"}
-          trendUp={dashboard.pendingOrders === 0}
-          color="from-yellow-500 to-amber-600"
-          subtitle="Awaiting dispatch"
-          onClick={() => navigate("/orders")}
-        />
-
-        <StatCard
-          title="Low Stock Inventory Alerts"
-          value={dashboard.lowStockProducts}
+          title="Low Stock Alerts"
+          value={dashboard.lowStockProducts || 0}
           icon={<FaExclamationTriangle />}
           trend={dashboard.lowStockProducts > 0 ? "Restock Needed" : "Optimal Stock"}
           trendUp={dashboard.lowStockProducts === 0}
           color="from-rose-600 to-red-700"
-          subtitle="Below reorder threshold"
+          subtitle="Below reorder limit"
           onClick={() => navigate("/inventory")}
         />
       </div>

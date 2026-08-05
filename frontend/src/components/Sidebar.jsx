@@ -17,6 +17,9 @@ import {
   FaServer,
   FaInfoCircle,
   FaStethoscope,
+  FaBuilding,
+  FaDatabase,
+  FaLayerGroup,
 } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getUser, logout } from "../utils/auth";
@@ -32,6 +35,7 @@ const menuGroups = [
     title: "MANAGEMENT & CATALOG",
     items: [
       { name: "Products Catalog", path: "/products", icon: <FaBoxOpen /> },
+      { name: "Product Categories", path: "/categories", icon: <FaLayerGroup />, adminOnly: true },
       { name: "Inventory Stock", path: "/inventory", icon: <FaWarehouse />, adminOnly: true },
       { name: "Retailers Network", path: "/retailers", icon: <FaStore />, adminOnly: true },
     ],
@@ -45,11 +49,13 @@ const menuGroups = [
     ],
   },
   {
-    title: "FINANCIALS & SECURITY",
+    title: "FINANCIALS & SYSTEM",
     items: [
       { name: "Invoices & Billing", path: "/invoices", icon: <FaFileInvoice /> },
       { name: "Payments & Receipts", path: "/payments", icon: <FaMoneyCheckAlt /> },
       { name: "Outstanding Dues", path: "/outstanding", icon: <FaWallet />, adminOnly: true },
+      { name: "Company Profile", path: "/company-profile", icon: <FaBuilding />, adminOnly: true },
+      { name: "Backup & Restore", path: "/backup-restore", icon: <FaDatabase />, adminOnly: true },
       { name: "Audit Logs", path: "/audit-logs", icon: <FaShieldAlt />, adminOnly: true },
       { name: "Security Center", path: "/security-dashboard", icon: <FaShieldAlt />, adminOnly: true },
       { name: "Security Policy", path: "/security-settings", icon: <FaLock />, adminOnly: true },
@@ -93,12 +99,8 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
         {/* Brand Header */}
         <div className="p-6 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/50">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg font-bold ${
-              isRetailer 
-                ? "bg-gradient-to-tr from-emerald-600 to-teal-500 shadow-emerald-500/20" 
-                : "bg-gradient-to-tr from-indigo-600 to-blue-500 shadow-indigo-500/20"
-            }`}>
-              <FaShieldAlt className="text-xl" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-950 p-1 border border-slate-800 shadow-lg flex items-center justify-center">
+              <img src="/icon-192.png" alt="Beereddy Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="text-lg font-extrabold tracking-tight text-white">
@@ -137,9 +139,12 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   <NavLink
                     key={item.name}
                     to={item.path}
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={() => {
+                      setSidebarOpen(false);
+                      window.scrollTo({ top: 0, behavior: "instant" });
+                    }}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 group ${
+                      `flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-150 touch-manipulation group ${
                         isActive
                           ? isRetailer
                             ? "bg-emerald-600/15 text-emerald-300 font-bold border border-emerald-500/30 shadow-sm"

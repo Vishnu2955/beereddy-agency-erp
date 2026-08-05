@@ -7,6 +7,56 @@ const settingsSchema = new mongoose.Schema(
       default: "payment_settings",
       unique: true,
     },
+    // Company Profile & Setup Wizard Fields
+    agencyName: {
+      type: String,
+      default: "Beereddy Agency",
+    },
+    ownerName: {
+      type: String,
+      default: "B Upender Reddy",
+    },
+    gstNumber: {
+      type: String,
+      default: "36AAAPB1234A1Z5",
+    },
+    phone: {
+      type: String,
+      default: "9876543210",
+    },
+    email: {
+      type: String,
+      default: "admin@beereddyagency.com",
+    },
+    address: {
+      type: String,
+      default: "Main Road, Near Bus Stand, Dist. Headquarters",
+    },
+    logo: {
+      type: String,
+      default: "/icon-192.png",
+    },
+    currency: {
+      type: String,
+      default: "₹",
+    },
+    financialYear: {
+      type: String,
+      default: "2026-2027",
+    },
+    invoicePrefix: {
+      type: String,
+      default: "BRA",
+    },
+    defaultTaxPercentage: {
+      type: Number,
+      default: 18,
+    },
+    isSetupCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    // Banking & Payment Details
     adminPayee: {
       type: String,
       default: "B UPENDER REDDY",

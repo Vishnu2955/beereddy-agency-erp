@@ -37,6 +37,23 @@ const addProduct = async (req, res) => {
       });
     }
 
+    const pPrice = Number(purchasePrice);
+    const sPrice = Number(sellingPrice);
+    const mPrice = Number(mrp);
+    const taxRate = Number(gst || 18);
+
+    if (pPrice < 0 || sPrice < 0 || mPrice < 0) {
+      return res.status(400).json({ success: false, message: "Prices cannot be negative values." });
+    }
+
+    if (mPrice < sPrice) {
+      return res.status(400).json({ success: false, message: "MRP (Maximum Retail Price) cannot be less than Selling Price." });
+    }
+
+    if (taxRate < 0 || taxRate > 28) {
+      return res.status(400).json({ success: false, message: "GST percentage must be between 0% and 28%." });
+    }
+
     // Optional SKU Validation & Formatting
     let finalSku = null;
     if (sku && String(sku).trim() !== "") {
@@ -50,19 +67,20 @@ const addProduct = async (req, res) => {
       }
     }
 
-    // Create Product (Barcode is ignored/optional)
+    // Create Product
     const product = await Product.create({
       productName,
       brand,
       category,
       sku: finalSku,
-      purchasePrice: Number(purchasePrice),
-      sellingPrice: Number(sellingPrice),
-      mrp: Number(mrp),
-      gst: Number(gst),
+      barcode: req.body.barcode || "",
+      purchasePrice: pPrice,
+      sellingPrice: sPrice,
+      mrp: mPrice,
+      gst: taxRate,
       stock: Number(stock || 0),
       minimumStock: Number(minimumStock || 5),
-      unit,
+      unit: unit || "PCS",
       description,
       image: req.file ? req.file.filename : "",
     });

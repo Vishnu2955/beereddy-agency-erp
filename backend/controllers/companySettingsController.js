@@ -7,22 +7,18 @@ const getCompanySettings = async (req, res) => {
     if (!settings) {
       settings = await Settings.create({
         key: "company_settings",
-        companyName: "BEEREDDY AGENCY",
-        dealerTagline: "A Trusted V Bond Distributor",
-        address: "H.No. 4-12, Main Road, Distributor Market",
-        city: "Hyderabad",
-        district: "Rangareddy",
-        state: "Telangana",
-        pincode: "500001",
-        gstNumber: "36AAACB1234C1Z5",
-        phone: "+91 9876543210",
-        email: "contact@beereddyagency.com",
-        website: "https://beereddyagency.com",
-        logo: "/logo.png",
-        invoiceFooter: "Thank you for doing business with Beereddy Agency!",
-        invoiceTerms: "1. Goods once sold will not be taken back without valid approval.\n2. Interest @ 18% p.a. will be charged on overdue payments.",
-        signatureImage: "",
-        companyStamp: "",
+        agencyName: "Beereddy Agency",
+        ownerName: "B Upender Reddy",
+        gstNumber: "36AAAPB1234A1Z5",
+        phone: "9876543210",
+        email: "admin@beereddyagency.com",
+        address: "Main Road, Near Bus Stand, Dist. Headquarters",
+        logo: "/icon-192.png",
+        currency: "₹",
+        financialYear: "2026-2027",
+        invoicePrefix: "BRA",
+        defaultTaxPercentage: 18,
+        isSetupCompleted: false,
       });
     }
     res.json({ success: true, settings });
@@ -31,26 +27,55 @@ const getCompanySettings = async (req, res) => {
   }
 };
 
-// Update Company Settings
+// Update Company Settings / Complete First-Time Setup
 const updateCompanySettings = async (req, res) => {
   try {
     if (req.user?.role !== "admin") {
-      return res.status(403).json({ success: false, message: "Only Admin can update company settings." });
+      return res.status(403).json({ success: false, message: "Only Admin can update company profile settings." });
+    }
+
+    const updateData = {
+      ...req.body,
+      lastUpdatedBy: req.user.fullName || "Admin",
+      lastUpdatedAt: new Date(),
+    };
+
+    if (req.body.isSetupCompleted !== undefined) {
+      updateData.isSetupCompleted = Boolean(req.body.isSetupCompleted);
     }
 
     const settings = await Settings.findOneAndUpdate(
       { key: "company_settings" },
-      {
-        ...req.body,
-        lastUpdatedBy: req.user.fullName || "Admin",
-        lastUpdatedAt: new Date(),
-      },
+      updateData,
       { new: true, upsert: true }
     );
 
     res.json({
       success: true,
-      message: "Company settings updated successfully! All invoices and pages updated.",
+      message: "Company profile settings updated successfully! Reflecting across all invoices & reports.",
+      settings,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Reset First-Time Setup Wizard (Admin Only)
+const resetSetupWizard = async (req, res) => {
+  try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Only Admin can reset setup wizard." });
+    }
+
+    const settings = await Settings.findOneAndUpdate(
+      { key: "company_settings" },
+      { isSetupCompleted: false },
+      { new: true, upsert: true }
+    );
+
+    res.json({
+      success: true,
+      message: "Setup wizard reset! The wizard will launch on next admin login.",
       settings,
     });
   } catch (error) {
@@ -61,4 +86,5 @@ const updateCompanySettings = async (req, res) => {
 module.exports = {
   getCompanySettings,
   updateCompanySettings,
+  resetSetupWizard,
 };

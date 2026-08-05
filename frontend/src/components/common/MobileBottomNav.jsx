@@ -18,8 +18,9 @@ export default function MobileBottomNav() {
           <NavLink
             key={item.name}
             to={item.path}
+            onClick={() => window.scrollTo({ top: 0, behavior: "instant" })}
             className={({ isActive }) =>
-              `relative flex flex-col items-center justify-center py-1.5 px-3 min-h-[48px] min-w-[56px] rounded-2xl transition-all duration-300 active:scale-95 ${
+              `relative flex flex-col items-center justify-center py-1.5 px-3 min-h-[48px] min-w-[56px] rounded-2xl transition-all duration-150 touch-manipulation active:scale-95 ${
                 isActive
                   ? "text-blue-400 font-black"
                   : "text-slate-400 hover:text-slate-200 font-semibold"
@@ -29,9 +30,9 @@ export default function MobileBottomNav() {
             {({ isActive }) => (
               <>
                 {isActive && (
-                  <span className="absolute inset-0 bg-blue-600/20 rounded-2xl border border-blue-500/30 animate-pulse pointer-events-none" />
+                  <span className="absolute inset-0 bg-blue-600/20 rounded-2xl border border-blue-500/30 pointer-events-none" />
                 )}
-                <div className={`transition-transform duration-300 ${isActive ? "-translate-y-0.5 scale-110" : ""}`}>
+                <div className={`transition-transform duration-150 ${isActive ? "-translate-y-0.5 scale-110" : ""}`}>
                   {item.icon}
                 </div>
                 <span className="text-[10px] tracking-tight mt-0.5 z-10">{item.name}</span>

@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -24,25 +25,34 @@ import MobileSettings from "./pages/MobileSettings";
 import SystemStatus from "./pages/SystemStatus";
 import About from "./pages/About";
 import SystemDiagnostics from "./pages/SystemDiagnostics";
+import CompanyProfile from "./pages/CompanyProfile";
+import Categories from "./pages/Categories";
+import BackupRestore from "./pages/BackupRestore";
 
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminLayout from "./layouts/AdminLayout";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
 
         {/* Auth Routes */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route
-  path="/forgot-password"
-  element={<ForgotPassword />}
-  />
-  <Route path="/verify-otp" element={<VerifyOtp />} />
-<Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
 
         {/* Protected ERP Routes */}
@@ -55,6 +65,9 @@ function App() {
         >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/company-profile" element={<CompanyProfile />} />
+          <Route path="/backup-restore" element={<BackupRestore />} />
           <Route path="/retailers" element={<Retailers />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/reports" element={<Reports />} />

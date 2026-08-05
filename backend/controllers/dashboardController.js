@@ -2,11 +2,10 @@ const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const User = require("../models/User");
 const Order = require("../models/Order");
-
 const Payment = require("../models/Payment");
 
 // ==============================
-// Dashboard Statistics
+// Dashboard Statistics (Real-Time DB Aggregations)
 // ==============================
 const getDashboardStats = async (req, res) => {
   try {
@@ -18,6 +17,10 @@ const getDashboardStats = async (req, res) => {
     const totalRetailers = isRetailer
       ? 1
       : await User.countDocuments({ role: "retailer" });
+
+    const totalCustomers = isRetailer
+      ? 1
+      : await User.countDocuments({ role: { $in: ["retailer", "customer"] } });
 
     const totalOrders = isRetailer
       ? await Order.countDocuments({ retailer: retailerId })
@@ -33,6 +36,7 @@ const getDashboardStats = async (req, res) => {
 
     const matchStage = isRetailer ? { retailer: retailerId, orderStatus: { $ne: "Cancelled" } } : { orderStatus: { $ne: "Cancelled" } };
 
+    // Total Lifetime Revenue
     const sales = await Order.aggregate([
       { $match: matchStage },
       {
@@ -42,22 +46,57 @@ const getDashboardStats = async (req, res) => {
         },
       },
     ]);
-
     const totalSales = sales.length > 0 ? sales[0].totalSales : 0;
 
+    // Today's Sales Calculation
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const todayMatch = { ...matchStage, createdAt: { $gte: startOfToday } };
+    const todaySalesAgg = await Order.aggregate([
+      { $match: todayMatch },
+      {
+        $group: {
+          _id: null,
+          amount: { $sum: { $ifNull: ["$finalAmount", "$totalAmount"] } },
+        },
+      },
+    ]);
+    const todaySales = todaySalesAgg.length > 0 ? todaySalesAgg[0].amount : 0;
+
+    // Monthly Sales Calculation
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const monthMatch = { ...matchStage, createdAt: { $gte: startOfMonth } };
+    const monthSalesAgg = await Order.aggregate([
+      { $match: monthMatch },
+      {
+        $group: {
+          _id: null,
+          amount: { $sum: { $ifNull: ["$finalAmount", "$totalAmount"] } },
+        },
+      },
+    ]);
+    const monthlySales = monthSalesAgg.length > 0 ? monthSalesAgg[0].amount : 0;
+
+    // Calculate Outstanding Credit & Pending Payments
     let outstandingAmount = 0;
-    if (isRetailer) {
-      const retailerOrders = await Order.find({ 
-        retailer: retailerId, 
-        orderStatus: { $ne: "Cancelled" },
-        paymentStatus: { $ne: "Paid" }
-      });
-      for (const ord of retailerOrders) {
-        const approvedPayments = await Payment.find({ order: ord._id, status: { $in: ["Approved", "Paid"] } });
-        const paidForOrd = approvedPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
-        const ordTotal = Number(ord.finalAmount || ord.totalAmount || 0);
-        outstandingAmount += Math.max(0, ordTotal - paidForOrd);
-      }
+    let pendingPaymentsCount = 0;
+
+    const unpaidFilter = isRetailer
+      ? { retailer: retailerId, orderStatus: { $ne: "Cancelled" }, paymentStatus: { $ne: "Paid" } }
+      : { orderStatus: { $ne: "Cancelled" }, paymentStatus: { $ne: "Paid" } };
+
+    const unpaidOrders = await Order.find(unpaidFilter);
+    pendingPaymentsCount = unpaidOrders.length;
+
+    for (const ord of unpaidOrders) {
+      const approvedPayments = await Payment.find({ order: ord._id, status: { $in: ["Approved", "Paid"] } });
+      const paidForOrd = approvedPayments.reduce((s, p) => s + Number(p.amount || 0), 0);
+      const ordTotal = Number(ord.finalAmount || ord.totalAmount || 0);
+      outstandingAmount += Math.max(0, ordTotal - paidForOrd);
     }
 
     res.status(200).json({
@@ -65,10 +104,14 @@ const getDashboardStats = async (req, res) => {
       dashboard: {
         totalProducts,
         totalRetailers,
+        totalCustomers,
         totalOrders,
         pendingOrders,
         lowStockProducts,
         totalSales,
+        todaySales,
+        monthlySales,
+        pendingPayments: pendingPaymentsCount,
         outstandingAmount,
       },
     });
@@ -215,7 +258,7 @@ const getOrderStatus = async (req, res) => {
 };
 
 // ==============================
-// Top Selling / Purchased Products
+// Top Selling Products
 // ==============================
 const getTopSellingProducts = async (req, res) => {
   try {

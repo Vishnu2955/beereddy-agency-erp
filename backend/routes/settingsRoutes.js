@@ -33,6 +33,7 @@ const upload = multer({ storage });
 const {
   getCompanySettings,
   updateCompanySettings,
+  resetSetupWizard,
 } = require("../controllers/companySettingsController");
 const { resetErp } = require("../controllers/adminController");
 
@@ -56,6 +57,7 @@ router.post("/whatsapp/test", verifyToken, isAdmin, testWhatsAppNotification);
 // Company Settings Routes
 router.get("/company", getCompanySettings);
 router.put("/company", verifyToken, isAdmin, updateCompanySettings);
+router.post("/company/reset-wizard", verifyToken, isAdmin, resetSetupWizard);
 
 // Reset ERP Route
 router.post("/reset-erp", verifyToken, isAdmin, resetErp);
