@@ -1862,14 +1862,21 @@
 }
 
 /* Pleasant High-Impact ERP App Wallpaper Theme */
+html, body, #root {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  background-color: #f1f5f9;
+}
+
 .pleasant-app-bg {
   background: 
-    radial-gradient(circle at 0% 0%, rgba(245, 158, 11, 0.12) 0%, transparent 45%),
-    radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 0% 0%, rgba(245, 158, 11, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.14) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.12) 0%, transparent 60%),
     linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%) !important;
   color: #0f172a !important;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   position: relative;
 }
 

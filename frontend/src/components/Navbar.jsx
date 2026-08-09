@@ -4,6 +4,8 @@ import { FaBars, FaBell, FaSearch, FaCheckCircle, FaExclamationTriangle, FaInfoC
 import { getUser, logout } from "../utils/auth";
 import { successToast } from "../utils/toast";
 import api from "../services/api";
+import { usePwa } from "../context/PwaContext";
+import { FaSyncAlt } from "react-icons/fa";
 
 export default function Navbar({
   sidebarOpen,
@@ -11,6 +13,7 @@ export default function Navbar({
   onOpenSearch,
 }) {
   const navigate = useNavigate();
+  const { applyUpdate, updateAvailable } = usePwa();
   const user = getUser();
   const role = user?.role || "admin";
   const isRetailer = role === "retailer";
@@ -139,6 +142,23 @@ export default function Navbar({
           <kbd className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[10px] px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700">
             ⌘K
           </kbd>
+        </button>
+
+        {/* Manual App Update Button */}
+        <button
+          onClick={() => {
+            successToast("⚡ Purging caches and activating latest app version...");
+            applyUpdate();
+          }}
+          className={`px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition shadow-sm cursor-pointer ${
+            updateAvailable
+              ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white animate-bounce shadow-amber-500/30"
+              : "bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200"
+          }`}
+          title="Force Update App to Latest Version"
+        >
+          <FaSyncAlt className={`text-xs ${updateAvailable ? "animate-spin" : ""}`} />
+          <span>{updateAvailable ? "Update Now!" : "Update App"}</span>
         </button>
 
         {/* Notifications Icon Button & Dropdown Container */}
