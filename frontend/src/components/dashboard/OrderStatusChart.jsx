@@ -38,16 +38,16 @@ export default function OrderStatusChart() {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-5">
+    <div className="dynamic-card-3d bg-white rounded-3xl border border-slate-200/90 shadow-md p-6 space-y-5">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg border border-blue-100">
+        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg border border-blue-100 shadow-sm">
           <FaChartPie />
         </div>
         <div>
-          <h2 className="text-base font-extrabold text-slate-800">
+          <h2 className="text-base font-black text-slate-900 tracking-tight">
             Order Fulfillment Breakdown
           </h2>
-          <p className="text-xs text-slate-400 font-medium">Real-time order stage distribution</p>
+          <p className="text-xs text-slate-500 font-semibold">Real-time order stage distribution</p>
         </div>
       </div>
 

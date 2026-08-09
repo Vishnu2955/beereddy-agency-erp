@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Loader from "../components/Loader";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import {
@@ -85,12 +86,7 @@ export default function CompanyProfile() {
   };
 
   if (loading) {
-    return (
-      <div className="p-8 text-center text-slate-400">
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        Loading Company Profile...
-      </div>
-    );
+    return <Loader text="Loading Company Profile..." />;
   }
 
   return (

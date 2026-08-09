@@ -13,13 +13,13 @@ export default function StatCard({
   return (
     <div
       onClick={onClick}
-      className={`relative overflow-hidden bg-white p-6 rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group ${
+      className={`dynamic-card-3d rounded-3xl p-6 border border-slate-200/80 shadow-md group ${
         onClick ? "cursor-pointer" : ""
       }`}
     >
       
       {/* Background Gradient Decorative Touch */}
-      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${color}`} />
+      <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${color}`} />
 
       <div className="flex items-start justify-between">
         <div className="space-y-1.5">

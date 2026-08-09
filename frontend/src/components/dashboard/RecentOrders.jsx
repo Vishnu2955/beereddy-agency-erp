@@ -21,23 +21,23 @@ export default function RecentOrders() {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-5">
+    <div className="dynamic-card-3d bg-white rounded-3xl border border-slate-200/90 shadow-md p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg border border-amber-100">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg border border-amber-100 shadow-sm">
             <FaClipboardList />
           </div>
           <div>
-            <h2 className="text-base font-extrabold text-slate-800">
+            <h2 className="text-base font-black text-slate-900 tracking-tight">
               Recent Agency Orders
             </h2>
-            <p className="text-xs text-slate-400 font-medium">Latest incoming retailer transactions</p>
+            <p className="text-xs text-slate-500 font-semibold">Latest incoming retailer transactions</p>
           </div>
         </div>
 
         <button
           onClick={() => navigate("/orders")}
-          className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition"
+          className="text-xs font-black text-blue-600 hover:text-blue-800 flex items-center gap-1 transition"
         >
           View All <FaArrowRight className="text-[10px]" />
         </button>
@@ -46,10 +46,10 @@ export default function RecentOrders() {
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-slate-100 text-slate-400 font-extrabold uppercase tracking-wider text-[10px] text-left">
+            <tr className="border-b border-slate-200 text-slate-700 font-black uppercase tracking-wider text-[10px] text-left">
               <th className="py-3 px-2">Retailer Shop</th>
-              <th className="py-3 px-2 text-right">Order Amount</th>
-              <th className="py-3 px-2 text-center">Fulfillment</th>
+              <th className="py-3 px-2 text-center">Order Amount</th>
+              <th className="py-3 px-2 text-right">Fulfillment</th>
             </tr>
           </thead>
 

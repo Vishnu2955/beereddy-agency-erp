@@ -82,21 +82,21 @@ export default function SalesChart() {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-5">
+    <div className="dynamic-card-3d bg-white rounded-3xl border border-slate-200/90 shadow-md p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg border border-indigo-100">
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg border border-indigo-100 shadow-sm">
             <FaChartLine />
           </div>
           <div>
-            <h2 className="text-base font-extrabold text-slate-800">
+            <h2 className="text-base font-black text-slate-900 tracking-tight">
               Monthly Sales Performance
             </h2>
-            <p className="text-xs text-slate-400 font-medium">Revenue trends across billing cycles</p>
+            <p className="text-xs text-slate-500 font-semibold">Revenue trends across billing cycles</p>
           </div>
         </div>
 
-        <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full">
+        <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full shadow-sm">
           Monthly View
         </span>
       </div>

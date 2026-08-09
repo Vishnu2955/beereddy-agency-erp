@@ -19,23 +19,23 @@ export default function TopProducts() {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-5">
+    <div className="dynamic-card-3d bg-white rounded-3xl border border-slate-200/90 shadow-md p-6 space-y-5">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg border border-amber-100">
+        <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg border border-amber-100 shadow-sm">
           <FaTrophy />
         </div>
         <div>
-          <h2 className="text-base font-extrabold text-slate-800">
+          <h2 className="text-base font-black text-slate-900 tracking-tight">
             Top Performing Products Leaderboard
           </h2>
-          <p className="text-xs text-slate-400 font-medium">Highest volume and revenue generating inventory</p>
+          <p className="text-xs text-slate-500 font-semibold">Highest volume and revenue generating inventory</p>
         </div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-slate-100 text-slate-400 font-extrabold uppercase tracking-wider text-[10px] text-left">
+            <tr className="border-b border-slate-200 text-slate-700 font-black uppercase tracking-wider text-[10px] text-left">
               <th className="py-3 px-2">Rank & Product Name</th>
               <th className="py-3 px-2 text-center">Units Sold</th>
               <th className="py-3 px-2 text-right">Total Revenue</th>

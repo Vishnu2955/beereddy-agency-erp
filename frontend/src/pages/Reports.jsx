@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import Loader from "../components/Loader";
 import api from "../services/api";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -165,11 +166,7 @@ const exportPDF = () => {
 
 
   if (loading) {
-    return (
-      <div className="text-center mt-5">
-        <div className="spinner-border"></div>
-      </div>
-    );
+    return <Loader text="Compiling Financial & Sales Reports..." />;
   }
   ;
 

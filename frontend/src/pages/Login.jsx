@@ -13,6 +13,7 @@ import {
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { successToast, errorToast } from "../utils/toast";
+import VbondTruck3D from "../components/common/VbondTruck3D";
 import { usePwa } from "../context/PwaContext";
 
 function Login() {
@@ -89,7 +90,8 @@ function Login() {
                   </div>
 
                   <button
-                    onClick={isInstallable ? promptInstall : () => {}}
+                    type="button"
+                    onClick={promptInstall}
                     className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-900/30 flex items-center gap-2 transition-all active:scale-95 border border-emerald-300/40 shrink-0 cursor-pointer"
                   >
                     <FaDownload className="text-xs" /> <span>Install App</span>
@@ -107,59 +109,9 @@ function Login() {
                 </div>
               </div>
 
-              {/* Interactive 3D Character Dragging Card Scene */}
-              <div className="scene-custom min-h-[240px]">
-                <div className="ground-custom" />
-                <div className="pull-rope" />
-                
-                {/* 3D Floating V-Bond Product Cubes */}
-                <div className="floating-cube-3d cube-1">
-                  <span>V-BOND</span>
-                  <span className="text-[6px] opacity-80">ADHESIVE</span>
-                </div>
-
-                <div className="floating-cube-3d cube-2">
-                  <span>TILE</span>
-                  <span className="text-[6px] opacity-80">PRO</span>
-                </div>
-
-                {/* 3D Character Multi-Layer Structure */}
-                <div className="character-wrapper-custom">
-                  <div className="character-custom">
-                    <div className="shadow-custom" />
-                    
-                    <div className="torso-custom">
-                      <div className="character-shirt" />
-                      <div className="character-tie" />
-                      <div className="character-belt">
-                        <div className="character-buckle" />
-                      </div>
-                    </div>
-
-                    <div className="head-custom">
-                      <div className="character-hair" />
-                      <div className="character-eyes">
-                        <div className="eye" />
-                        <div className="eye" />
-                      </div>
-                      <div className="character-smile" />
-                    </div>
-
-                    <div className="arm-custom left" />
-                    <div className="arm-custom right" />
-                    
-                    <div className="legs-custom">
-                      <div className="leg-custom left">
-                        <div className="character-shoe" />
-                      </div>
-                      <div className="leg-custom right">
-                        <div className="character-shoe" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="briefcase-custom" />
+              {/* 3D Animated V-BOND Moving Truck Scene */}
+              <div className="py-2">
+                <VbondTruck3D bannerText="V-BOND" subText="EXECUTIVE LOGISTICS" />
               </div>
 
               {/* Bottom Feature Badges */}
@@ -267,13 +219,13 @@ function Login() {
 
                 <div className="text-center pt-6 border-t border-slate-100">
                   <p className="text-xs text-slate-500 font-medium">
-                    New Retailer / Dealer?{" "}
+                    New Retailer Partner?{" "}
                     <button
                       type="button"
                       onClick={() => navigate("/register")}
                       className="text-amber-600 hover:text-amber-700 font-bold transition underline cursor-pointer"
                     >
-                      Register Dealer Account
+                      Register Retailer Account
                     </button>
                   </p>
                 </div>

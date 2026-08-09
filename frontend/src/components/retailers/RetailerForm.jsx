@@ -59,7 +59,12 @@ export default function RetailerForm({
     <form
       onSubmit={handleSubmit}
       className="space-y-5"
+      autoComplete="off"
     >
+      {/* Hidden dummy fields to trick browser password manager autofill */}
+      <input type="text" name="prevent_autofill_user" className="hidden" tabIndex="-1" autoComplete="off" />
+      <input type="password" name="prevent_autofill_pass" className="hidden" tabIndex="-1" autoComplete="new-password" />
+
       <div className="grid md:grid-cols-2 gap-5">
 
         <div>
@@ -72,6 +77,7 @@ export default function RetailerForm({
             name="fullName"
             value={form.fullName}
             onChange={handleChange}
+            autoComplete="off"
             required
             className="w-full border rounded-lg px-4 py-2"
           />
@@ -87,6 +93,7 @@ export default function RetailerForm({
             name="shopName"
             value={form.shopName}
             onChange={handleChange}
+            autoComplete="off"
             required
             className="w-full border rounded-lg px-4 py-2"
           />
@@ -102,6 +109,7 @@ export default function RetailerForm({
             name="phone"
             value={form.phone}
             onChange={handleChange}
+            autoComplete="off"
             required
             className="w-full border rounded-lg px-4 py-2"
           />
@@ -117,6 +125,7 @@ export default function RetailerForm({
             name="email"
             value={form.email}
             onChange={handleChange}
+            autoComplete="off"
             className="w-full border rounded-lg px-4 py-2"
           />
         </div>
@@ -132,6 +141,7 @@ export default function RetailerForm({
          name="password"
          value={form.password}
          onChange={handleChange}
+         autoComplete="new-password"
          required={!initialData}
          className="w-full border rounded-lg px-4 py-2"
          />

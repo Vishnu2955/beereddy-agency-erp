@@ -84,18 +84,23 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 1. SPA Navigation Requests (Android PWA Instant Navigation Fix)
-  // For HTML navigation (mode === 'navigate' or accept: text/html), serve the precached /index.html app shell
+  // 1. SPA Navigation Requests (Network-First with Cache Fallback for instant update detection)
   if (request.mode === "navigate" || (request.headers.get("accept") || "").includes("text/html")) {
     event.respondWith(
-      caches.match("/index.html").then((cachedIndex) => {
-        if (cachedIndex) {
-          return cachedIndex;
-        }
-        return fetch("/index.html").catch(() => {
-          return caches.match("/");
-        });
-      })
+      fetch(request, { cache: "no-cache" })
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put("/index.html", responseClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Offline fallback
+          return caches.match("/index.html").then((cachedIndex) => {
+            return cachedIndex || caches.match("/");
+          });
+        })
     );
     return;
   }

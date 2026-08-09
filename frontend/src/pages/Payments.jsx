@@ -4,6 +4,7 @@ import { getUser } from "../utils/auth";
 import { successToast, errorToast } from "../utils/toast";
 import PaymentGatewayModal from "../components/payments/PaymentGatewayModal";
 import SkeletonLoader from "../components/common/SkeletonLoader";
+import UiverseCheckoutCard from "../components/payments/UiverseCheckoutCard";
 import {
   FaCreditCard,
   FaLock,
@@ -487,6 +488,29 @@ export default function PaymentReport() {
                 <FaLock /> Pay Due Balance Now
               </button>
             </div>
+          </div>
+
+          {/* UIVERSE CHECKOUT & PAYMENT CARD (From Uiverse.io by mi-series) */}
+          <div className="flex justify-center my-6">
+            <UiverseCheckoutCard
+              title="RETAILER CHECKOUT & DUE PAYMENT"
+              shippingAddress={currentUser?.address || "Registered Business Store Address, Beereddy Network"}
+              paymentMethod="Official QR / UPI / Bank Transfer"
+              paymentDetail="BEEREDDY AGENCY ERP • GST Billing"
+              subtotal={metrics.totalOrdersAmount}
+              shipping={0}
+              tax={Math.round(metrics.totalOrdersAmount * 0.18)}
+              discount={metrics.totalPaid}
+              totalPrice={metrics.outstandingBalance}
+              onApplyPromo={(code) => {
+                if (code) successToast(`Promo code '${code}' submitted for admin review!`);
+              }}
+              onCheckout={() => {
+                setSelectedOrderForGateway(unpaidRetailerOrders[0] || null);
+                setIsGatewayOpen(true);
+              }}
+              buttonText="Pay Due Now"
+            />
           </div>
 
           {/* WIDE RANGE OF E-COMMERCE PAYMENT OPTIONS TILES */}

@@ -234,7 +234,20 @@ app.use(async (err, req, res, next) => {
   });
 });
 
-// Catch-all SPA Handler for non-API routes
+// Explicit Zero-Cache Route Handler for Service Worker and Manifest
+app.get("/sw.js", (req, res) => {
+  res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Content-Type", "application/javascript");
+  const swPath = path.join(frontendDistPath, "sw.js");
+  if (isFrontendDetected && fs.existsSync(swPath)) {
+    return res.sendFile(swPath);
+  }
+  return res.status(404).send("// SW not found");
+});
+
+// Catch-all SPA Handler for non-API routes with zero-cache for index.html
 app.get("*splat", (req, res) => {
   if (req.path.startsWith("/api")) {
     return res.status(404).json({
@@ -245,6 +258,9 @@ app.get("*splat", (req, res) => {
 
   const indexPath = path.join(frontendDistPath, "index.html");
   if (isFrontendDetected && fs.existsSync(indexPath)) {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     return res.sendFile(indexPath);
   }
 

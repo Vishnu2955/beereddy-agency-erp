@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import api from "../../services/api";
 import { successToast } from "../../utils/toast";
+import UiverseCheckoutCard from "./UiverseCheckoutCard";
 
 export default function PaymentGatewayModal({
   order,
@@ -110,26 +111,25 @@ export default function PaymentGatewayModal({
           </button>
         </div>
 
-        {/* Invoice Summary Banner */}
-        <div className="bg-blue-50 dark:bg-slate-800 p-4 border-b border-blue-100 dark:border-slate-700 grid grid-cols-3 text-center">
-          <div>
-            <span className="text-[10px] font-bold text-slate-500 uppercase block">Grand Total (Inc. GST)</span>
-            <span className="text-lg font-extrabold text-blue-700 dark:text-blue-400">
-              ₹{grandTotal.toLocaleString("en-IN")}
-            </span>
-          </div>
-          <div>
-            <span className="text-[10px] font-bold text-slate-500 uppercase block">Amount Paid</span>
-            <span className="text-lg font-extrabold text-emerald-600">
-              ₹{paid.toLocaleString("en-IN")}
-            </span>
-          </div>
-          <div>
-            <span className="text-[10px] font-bold text-slate-500 uppercase block">Payable Balance</span>
-            <span className="text-lg font-extrabold text-rose-600">
-              ₹{remainingBalance.toLocaleString("en-IN")}
-            </span>
-          </div>
+        {/* Uiverse Checkout & Payment Summary Card */}
+        <div className="p-4 bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex justify-center">
+          <UiverseCheckoutCard
+            title={`INVOICE #${order.invoiceNumber || order.orderNumber}`}
+            shippingAddress={order.deliveryAddress || "Beereddy Agency Registered Dealer Address"}
+            paymentMethod={selectedMethod === "qr" ? "Official QR Code" : selectedMethod === "bank" ? "Bank Transfer" : "Cash on Delivery"}
+            paymentDetail={`Paid: ₹${paid.toLocaleString("en-IN")}`}
+            subtotal={subtotal}
+            shipping={0}
+            tax={gst}
+            discount={discount}
+            totalPrice={remainingBalance > 0 ? remainingBalance : grandTotal}
+            onApplyPromo={(code) => {
+              if (code) successToast(`Promo code '${code}' applied!`);
+            }}
+            onCheckout={handleSubmitPayment}
+            buttonText="Submit Payment"
+            loading={submitting}
+          />
         </div>
 
         {/* Payment Method Selector Tabs */}

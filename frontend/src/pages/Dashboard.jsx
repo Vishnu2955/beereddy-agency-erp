@@ -170,10 +170,10 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Navigation Cards Hub */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/90 space-y-4">
+        <div className="dynamic-card-3d bg-white p-6 rounded-3xl shadow-md border border-slate-200/90 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-extrabold text-slate-800 uppercase tracking-wider">Retailer Operations Hub</h2>
-            <span className="text-xs text-slate-400 font-semibold">Quick Shortcuts</span>
+            <h2 className="text-base font-black text-slate-900 uppercase tracking-wider">Retailer Operations Hub</h2>
+            <span className="text-xs text-slate-600 font-black">Quick Shortcuts</span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

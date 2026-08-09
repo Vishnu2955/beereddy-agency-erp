@@ -3,6 +3,7 @@ import { FaTimes, FaTrash, FaQrcode, FaCheckCircle, FaShoppingBag, FaArrowRight 
 import api from "../../services/api";
 import { getUser } from "../../utils/auth";
 import { successToast, errorToast } from "../../utils/toast";
+import UiverseCheckoutCard from "../payments/UiverseCheckoutCard";
 
 export default function CartModal({ isOpen, onClose, cart, setCart, onOrderPlaced }) {
   const user = getUser();
@@ -177,22 +178,24 @@ export default function CartModal({ isOpen, onClose, cart, setCart, onOrderPlace
                 </div>
               ))}
 
-              {/* Financial Calculation Box */}
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-sm mt-4">
-                <div className="flex justify-between text-slate-600">
-                  <span>Subtotal (Excl. Tax):</span>
-                  <span className="font-bold text-slate-800">₹{Number(subtotalAmount).toLocaleString("en-IN")}</span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>GST (18%):</span>
-                  <span className="font-bold text-blue-700">+₹{Number(gstAmount).toLocaleString("en-IN")}</span>
-                </div>
-                <div className="flex justify-between items-center text-base font-black text-slate-900 border-t border-slate-200 pt-2">
-                  <span>Total Amount Payable (Incl. GST):</span>
-                  <span className="text-2xl font-black text-blue-700">
-                    ₹{Number(grandTotalAmount).toLocaleString("en-IN")}
-                  </span>
-                </div>
+              {/* UIVERSE CHECKOUT & PAYMENT CARD (From Uiverse.io by mi-series) */}
+              <div className="my-4 flex justify-center">
+                <UiverseCheckoutCard
+                  title="CART CHECKOUT & PAYMENT"
+                  shippingAddress={deliveryAddress || user?.address || "Beereddy Network Address"}
+                  paymentMethod={paymentMethod}
+                  paymentDetail="Official B2B ERP Checkout"
+                  subtotal={subtotalAmount}
+                  shipping={0}
+                  tax={gstAmount}
+                  totalPrice={grandTotalAmount}
+                  onApplyPromo={(code) => {
+                    if (code) successToast(`Promo code '${code}' applied!`);
+                  }}
+                  onCheckout={handleCheckout}
+                  buttonText="Checkout"
+                  loading={loading}
+                />
               </div>
             </div>
           )}

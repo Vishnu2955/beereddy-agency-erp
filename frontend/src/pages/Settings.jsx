@@ -944,7 +944,7 @@ export default function Settings() {
           {/* Master Password Reset Modal */}
           {resetModalOpen && (
             <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
-              <form onSubmit={handleResetErp} className="bg-white dark:bg-slate-900 p-6 rounded-2xl max-w-md w-full shadow-2xl border border-red-200 space-y-4">
+              <form onSubmit={handleResetErp} className="bg-white dark:bg-slate-900 p-6 rounded-2xl max-w-md w-full shadow-2xl border border-red-200 space-y-4" autoComplete="off">
                 <h3 className="text-lg font-extrabold text-red-600 flex items-center gap-2">
                   <FaExclamationTriangle /> Confirm ERP Master Reset
                 </h3>
@@ -959,6 +959,7 @@ export default function Settings() {
                     placeholder="Enter Admin Password"
                     value={resetPassword}
                     onChange={(e) => setResetPassword(e.target.value)}
+                    autoComplete="current-password"
                     className="w-full px-4 py-2 rounded-xl border border-red-300 text-xs font-mono"
                     required
                   />

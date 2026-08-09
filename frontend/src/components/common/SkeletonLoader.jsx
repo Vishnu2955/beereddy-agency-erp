@@ -1,4 +1,5 @@
 import React from "react";
+import Loader from "../Loader";
 
 export function SkeletonStatCard() {
   return (
@@ -47,10 +48,13 @@ export function SkeletonTableRow({ cols = 5 }) {
 export default function SkeletonLoader({ type = "stats", count = 4 }) {
   if (type === "stats") {
     return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: count }).map((_, i) => (
-          <SkeletonStatCard key={i} />
-        ))}
+      <div className="space-y-6">
+        <Loader text="Assembling Executive Dashboard Data..." />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: count }).map((_, i) => (
+            <SkeletonStatCard key={i} />
+          ))}
+        </div>
       </div>
     );
   }

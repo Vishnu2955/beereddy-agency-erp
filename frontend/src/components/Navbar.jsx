@@ -92,32 +92,33 @@ export default function Navbar({
   };
 
   return (
-    <header className="bg-white/90 backdrop-blur-md border-b border-slate-200/80 h-20 flex items-center justify-between px-6 sticky top-0 z-20 shadow-xs print:hidden">
+    <header className="bg-white/95 backdrop-blur-md border-b border-slate-200/80 h-16 sm:h-20 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-20 shadow-xs print:hidden">
 
       {/* Left Section: Mobile Menu & Brand Title */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         <button
           className="lg:hidden text-slate-600 hover:text-slate-900 p-2 rounded-xl hover:bg-slate-100 transition cursor-pointer"
           onClick={() => setSidebarOpen(!sidebarOpen)}
+          title="Open Menu"
         >
-          <FaBars className="text-xl" />
+          <FaBars className="text-lg sm:text-xl" />
         </button>
 
-        <div className="hidden sm:block">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <h2 className="text-sm sm:text-xl font-extrabold text-slate-800 tracking-tight leading-none">
               Beereddy Agency
             </h2>
-            <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border shadow-2xs uppercase tracking-wider ${
+            <span className={`text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 rounded-full border shadow-2xs uppercase tracking-wider ${
               isRetailer
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                 : "bg-indigo-50 text-indigo-700 border-indigo-200"
             }`}>
-              {isRetailer ? "Retailer Portal" : "Admin Panel"}
+              {isRetailer ? "Retailer" : "Admin"}
             </span>
           </div>
 
-          <p className="text-xs text-slate-400 font-medium mt-0.5">
+          <p className="hidden sm:block text-xs text-slate-400 font-medium mt-0.5">
             {isRetailer ? "Official B2B Ordering & Payment Center" : "Executive Distributor Command Center"}
           </p>
         </div>

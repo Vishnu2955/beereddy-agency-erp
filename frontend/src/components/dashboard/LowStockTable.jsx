@@ -21,23 +21,23 @@ export default function LowStockTable() {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 space-y-5">
+    <div className="dynamic-card-3d bg-white rounded-3xl border border-slate-200/90 shadow-md p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg border border-rose-100">
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg border border-rose-100 shadow-sm">
             <FaExclamationTriangle />
           </div>
           <div>
-            <h2 className="text-base font-extrabold text-slate-800">
+            <h2 className="text-base font-black text-slate-900 tracking-tight">
               Low Stock Alerts
             </h2>
-            <p className="text-xs text-slate-400 font-medium">Items near or below minimum stock level</p>
+            <p className="text-xs text-slate-500 font-semibold">Items near or below minimum stock level</p>
           </div>
         </div>
 
         <button
           onClick={() => navigate("/inventory")}
-          className="text-xs font-bold text-rose-600 hover:text-rose-800 flex items-center gap-1 transition"
+          className="text-xs font-black text-rose-600 hover:text-rose-800 flex items-center gap-1 transition"
         >
           Manage Inventory <FaArrowRight className="text-[10px]" />
         </button>
@@ -46,7 +46,7 @@ export default function LowStockTable() {
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-slate-100 text-slate-400 font-extrabold uppercase tracking-wider text-[10px] text-left">
+            <tr className="border-b border-slate-200 text-slate-700 font-black uppercase tracking-wider text-[10px] text-left">
               <th className="py-3 px-2">Product Name</th>
               <th className="py-3 px-2 text-center">Current Stock</th>
               <th className="py-3 px-2 text-center">Min Threshold</th>

@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { FaShieldAlt, FaKey, FaArrowRight, FaArrowLeft, FaSyncAlt } from "react-icons/fa";
 import api from "../services/api";
+import { successToast, errorToast } from "../utils/toast";
+import VbondTruck3D from "../components/common/VbondTruck3D";
 
 export default function VerifyOtp() {
   const navigate = useNavigate();
@@ -25,30 +28,29 @@ export default function VerifyOtp() {
     };
   }, [timer]);
 
-  const verifyOTP = async () => {
+  const verifyOTP = async (e) => {
+    if (e) e.preventDefault();
     if (!otp) {
-      return alert("Enter OTP");
+      return errorToast("Please enter the 6-digit OTP code.");
     }
 
     try {
       setLoading(true);
-
-      await api.post("/auth/verify-otp", {
+      const res = await api.post("/auth/verify-otp", {
         email,
         otp,
       });
 
-      alert("OTP Verified Successfully!");
-
-      navigate("/reset-password", {
-        state: {
-          email,
-          otp,
-        },
-      });
-
+      if (res.data?.success !== false) {
+        successToast("OTP verified successfully!");
+        navigate("/reset-password", {
+          state: { email, otp },
+        });
+      } else {
+        errorToast(res.data?.message || "Invalid OTP code.");
+      }
     } catch (err) {
-      alert(err.response?.data?.message || "OTP Verification Failed");
+      errorToast(err.response?.data?.message || "OTP Verification Failed. Please check the code.");
     } finally {
       setLoading(false);
     }
@@ -56,71 +58,136 @@ export default function VerifyOtp() {
 
   const handleResendOtp = async () => {
     if (!email) {
-      return alert("Email address missing. Please request OTP again.");
+      return errorToast("Email address missing. Please request OTP again.");
     }
 
     try {
       setResending(true);
       await api.post("/auth/send-otp", { email });
-      alert("A new OTP has been sent to your email!");
-      setTimer(60); // Reset 60s timer
+      successToast("A new OTP code has been sent to your email!");
+      setTimer(60);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to resend OTP");
+      errorToast(err.response?.data?.message || "Failed to resend OTP.");
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-slate-100 p-4">
-      <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-[400px]">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-950 via-amber-950 to-orange-950 relative overflow-hidden font-sans">
+      {/* Legend Glass Ambient Orbs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-orange-600/30 rounded-full blur-[140px] animate-pulse pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-amber-500/25 rounded-full blur-[140px] animate-pulse pointer-events-none" />
 
-        <h1 className="text-2xl font-bold mb-2 text-center text-blue-700">
-          Verify OTP
-        </h1>
-        <p className="text-sm text-gray-500 text-center mb-6">
-          Enter the OTP sent to <span className="font-semibold text-gray-700">{email || "your email"}</span>
-        </p>
+      {/* Main 3D Stage Card */}
+      <div className="auth-stage-custom relative z-10">
+        <div className="auth-card-custom shadow-2xl">
+          <div className="card-inner-custom">
+            
+            {/* Left Panel: 3D Character OTP Scene */}
+            <div className="animation-panel-custom flex flex-col justify-between">
+              <div className="relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center text-2xl shadow-lg border border-white/30">
+                    <FaShieldAlt />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold tracking-widest text-white/90 uppercase block">OTP Verification</span>
+                    <h1 className="text-xl font-black tracking-tight text-white">
+                      BEEREDDY AGENCY
+                    </h1>
+                  </div>
+                </div>
 
-        <input
-          type="text"
-          placeholder="Enter 6 Digit OTP"
-          className="border w-full p-3 rounded-lg mb-4 text-center text-xl tracking-widest outline-none focus:ring-2 focus:ring-blue-500"
-          value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          maxLength={6}
-        />
+                <div className="mt-8 space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-white/80">Security Check</p>
+                  <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight">
+                    Verify Security OTP Code.
+                  </h2>
+                  <p className="text-xs text-white/90 font-medium max-w-sm leading-relaxed">
+                    Check your inbox at <span className="font-bold underline">{email || "registered email"}</span>
+                  </p>
+                </div>
+              </div>
 
-        <button
-          onClick={verifyOTP}
-          disabled={loading}
-          className="bg-green-600 hover:bg-green-700 text-white w-full p-3 rounded-lg font-semibold transition mb-4 shadow"
-        >
-          {loading ? "Verifying..." : "Verify OTP"}
-        </button>
+              {/* 3D Animated V-BOND Logistics Moving Truck Scene */}
+              <div className="py-2">
+                <VbondTruck3D bannerText="V-BOND" subText="OTP VERIFICATION" />
+              </div>
 
-        <div className="text-center border-t pt-4">
-          <p className="text-xs text-gray-500 mb-2">
-            Didn't receive the OTP?
-          </p>
+              <div className="relative z-10 pt-4 border-t border-white/20 flex items-center justify-between text-[11px] font-bold text-white/90">
+                <span>🔒 Single-Use Verification Code</span>
+              </div>
+            </div>
 
-          <button
-            onClick={handleResendOtp}
-            disabled={timer > 0 || resending}
-            className={`w-full py-2 rounded-lg font-medium text-sm transition border ${
-              timer > 0 || resending
-                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                : "bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200"
-            }`}
-          >
-            {resending
-              ? "Resending..."
-              : timer > 0
-              ? `Resend OTP in ${timer}s`
-              : "Resend OTP"}
-          </button>
+            {/* Right Panel: Glassmorphic Form Controls */}
+            <div className="form-panel-custom">
+              <div className="mb-6">
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="inline-flex items-center gap-2 text-xs font-bold text-amber-600 hover:text-amber-700 transition cursor-pointer mb-4"
+                >
+                  <FaArrowLeft /> Change Email
+                </button>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Verify Security Code</h3>
+                <p className="text-xs text-slate-500 mt-1">Enter the 6-digit code sent to your email address</p>
+              </div>
+
+              <form onSubmit={verifyOTP} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    6-Digit Security OTP
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="• • • • • •"
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xl tracking-widest text-center rounded-2xl py-4 outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all font-black"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      maxLength={6}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black text-xs py-4 rounded-2xl shadow-xl shadow-amber-500/25 transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50 mt-3 cursor-pointer active:scale-98 shimmer-btn"
+                >
+                  {loading ? (
+                    <span>Verifying Code...</span>
+                  ) : (
+                    <>
+                      <span>Verify Code & Continue</span>
+                      <FaArrowRight className="text-xs" />
+                    </>
+                  )}
+                </button>
+
+                <div className="text-center pt-2">
+                  {timer > 0 ? (
+                    <p className="text-xs text-slate-500 font-semibold">
+                      Resend OTP code in <span className="text-amber-600 font-black">{timer}s</span>
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={resending}
+                      className="inline-flex items-center gap-1.5 text-xs font-extrabold text-amber-600 hover:text-amber-700 transition cursor-pointer"
+                    >
+                      <FaSyncAlt className={resending ? "animate-spin" : ""} /> Resend OTP Code
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+
+          </div>
         </div>
-
       </div>
     </div>
   );
