@@ -5,14 +5,10 @@ import {
   FaUser,
   FaLock,
   FaArrowRight,
-  FaCheckCircle,
-  FaBoxes,
-  FaWarehouse,
-  FaTruck,
-  FaLayerGroup,
   FaEye,
   FaEyeSlash,
   FaDownload,
+  FaCheckCircle,
 } from "react-icons/fa";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -44,14 +40,7 @@ function Login() {
 
       if (res.data && res.data.success) {
         const { token, user } = res.data;
-
-        // Step 4: Call AuthContext login() to update localStorage and state synchronously
         authLogin(token, user);
-
-        console.log("Token after save:", localStorage.getItem("token"));
-        console.log("User after save:", localStorage.getItem("user"));
-        console.log("Navigating to dashboard...");
-
         successToast("Signed in successfully!");
         navigate("/dashboard", { replace: true });
       } else {
@@ -70,213 +59,229 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 p-4 sm:p-6 lg:p-8 relative overflow-hidden">
-      {/* Animated V Bond Inspired Background Floating Particles */}
-      <div className="absolute top-10 left-10 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl animate-pulse pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl animate-pulse pointer-events-none" />
+    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-950 via-amber-950 to-orange-950 relative overflow-hidden font-sans">
+      {/* Legend Glass Ambient Orbs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-orange-600/30 rounded-full blur-[140px] animate-pulse pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-amber-500/25 rounded-full blur-[140px] animate-pulse pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-600/15 rounded-full blur-[160px] pointer-events-none" />
 
-      <div className="w-full max-w-5xl glass-panel bg-slate-900/90 border border-slate-800/90 rounded-3xl shadow-2xl overflow-hidden grid lg:grid-cols-12 relative z-10">
-        
-        {/* Left Side: Brand Experience & Illustrations (7 Cols) */}
-        <div className="lg:col-span-7 p-8 lg:p-12 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800/80 text-white flex flex-col justify-between space-y-8 relative overflow-hidden">
-          {/* Top Logo & Branding */}
-          <div>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center text-2xl shadow-xl shadow-blue-500/30">
-                  <FaShieldAlt />
+      {/* Main 3D Card Stage */}
+      <div className="auth-stage-custom relative z-10">
+        <div className="auth-card-custom shadow-2xl">
+          <div className="card-inner-custom">
+            
+            {/* Left Panel: 3D Walking Character Scene */}
+            <div className="animation-panel-custom flex flex-col justify-between">
+              
+              {/* Top Branding Banner */}
+              <div className="relative z-10">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center text-2xl shadow-lg border border-white/30">
+                      <FaShieldAlt />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold tracking-widest text-white/90 uppercase block">Distributor ERP</span>
+                      <h1 className="text-xl font-black tracking-tight text-white">
+                        BEEREDDY AGENCY
+                      </h1>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={isInstallable ? promptInstall : () => {}}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-900/30 flex items-center gap-2 transition-all active:scale-95 border border-emerald-300/40 shrink-0 cursor-pointer"
+                  >
+                    <FaDownload className="text-xs" /> <span>Install App</span>
+                  </button>
                 </div>
+
+                <div className="mt-8 space-y-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-white/80">Welcome Back</p>
+                  <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight">
+                    Move Forward With Confidence.
+                  </h2>
+                  <p className="text-xs text-white/90 font-medium max-w-sm leading-relaxed">
+                    V Bond Tile Adhesives • Live Stock Logistics • Instant GST Billing
+                  </p>
+                </div>
+              </div>
+
+              {/* Interactive 3D Character Dragging Card Scene */}
+              <div className="scene-custom min-h-[240px]">
+                <div className="ground-custom" />
+                <div className="pull-rope" />
+                
+                {/* 3D Floating V-Bond Product Cubes */}
+                <div className="floating-cube-3d cube-1">
+                  <span>V-BOND</span>
+                  <span className="text-[6px] opacity-80">ADHESIVE</span>
+                </div>
+
+                <div className="floating-cube-3d cube-2">
+                  <span>TILE</span>
+                  <span className="text-[6px] opacity-80">PRO</span>
+                </div>
+
+                {/* 3D Character Multi-Layer Structure */}
+                <div className="character-wrapper-custom">
+                  <div className="character-custom">
+                    <div className="shadow-custom" />
+                    
+                    <div className="torso-custom">
+                      <div className="character-shirt" />
+                      <div className="character-tie" />
+                      <div className="character-belt">
+                        <div className="character-buckle" />
+                      </div>
+                    </div>
+
+                    <div className="head-custom">
+                      <div className="character-hair" />
+                      <div className="character-eyes">
+                        <div className="eye" />
+                        <div className="eye" />
+                      </div>
+                      <div className="character-smile" />
+                    </div>
+
+                    <div className="arm-custom left" />
+                    <div className="arm-custom right" />
+                    
+                    <div className="legs-custom">
+                      <div className="leg-custom left">
+                        <div className="character-shoe" />
+                      </div>
+                      <div className="leg-custom right">
+                        <div className="character-shoe" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="briefcase-custom" />
+              </div>
+
+              {/* Bottom Feature Badges */}
+              <div className="relative z-10 pt-4 border-t border-white/20 flex flex-wrap gap-4 text-[11px] font-bold text-white/90">
+                <span className="flex items-center gap-1.5"><FaCheckCircle className="text-white" /> 100% Tax Invoices</span>
+                <span className="flex items-center gap-1.5"><FaCheckCircle className="text-white" /> Live Inventory</span>
+                <span className="flex items-center gap-1.5"><FaCheckCircle className="text-white" /> 24/7 Orders</span>
+              </div>
+
+            </div>
+
+            {/* Right Panel: Sleek Form Controls (Dragged from Right to Center) */}
+            <div className="form-panel-custom">
+              <div className="mb-6">
+                <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">Official Portal</p>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Portal Login</h3>
+                <p className="text-xs text-slate-500 mt-1">Sign in with your registered mobile number or email</p>
+              </div>
+
+              <form onSubmit={loginUser} className="space-y-4">
                 <div>
-                  <span className="text-[10px] font-extrabold tracking-widest text-blue-400 uppercase block">Distributor Management ERP</span>
-                  <h1 className="text-xl font-black tracking-tight text-white">
-                    BEEREDDY AGENCY
-                  </h1>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Mobile Number or Email
+                  </label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-3.5 text-amber-500">
+                      <FaUser className="text-sm" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Enter mobile or email..."
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs rounded-2xl pl-11 pr-4 py-3.5 outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all placeholder:text-slate-400 font-semibold"
+                      value={login}
+                      onChange={(e) => setLogin(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {isInstallable && (
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/forgot-password")}
+                      className="text-[11px] text-amber-600 hover:text-amber-700 font-bold transition cursor-pointer"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute left-4 top-3.5 text-amber-500">
+                      <FaLock className="text-sm" />
+                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••••••"
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs rounded-2xl pl-11 pr-11 py-3.5 outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all placeholder:text-slate-400 font-semibold"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-700 transition cursor-pointer"
+                      title={showPassword ? "Hide Password" : "Show Password"}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember Me Checkbox */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="remember"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 accent-amber-600 rounded cursor-pointer"
+                  />
+                  <label htmlFor="remember" className="text-xs text-slate-600 font-semibold cursor-pointer">
+                    Remember Me on this device
+                  </label>
+                </div>
+
+                {/* Submit Button */}
                 <button
-                  onClick={promptInstall}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-lg flex items-center gap-1.5 transition active:scale-95 shrink-0"
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-black text-xs py-4 rounded-2xl shadow-xl shadow-amber-500/25 transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50 mt-3 cursor-pointer active:scale-98 shimmer-btn"
                 >
-                  <FaDownload /> Install App
+                  {submitting ? (
+                    <span>Verifying Credentials...</span>
+                  ) : (
+                    <>
+                      <span>Sign In to ERP</span>
+                      <FaArrowRight className="text-xs" />
+                    </>
+                  )}
                 </button>
-              )}
+
+                <div className="text-center pt-6 border-t border-slate-100">
+                  <p className="text-xs text-slate-500 font-medium">
+                    New Retailer / Dealer?{" "}
+                    <button
+                      type="button"
+                      onClick={() => navigate("/register")}
+                      className="text-amber-600 hover:text-amber-700 font-bold transition underline cursor-pointer"
+                    >
+                      Register Dealer Account
+                    </button>
+                  </p>
+                </div>
+              </form>
             </div>
 
-            {/* Headline Banner */}
-            <div className="mt-10 space-y-3">
-              <span className="bg-blue-600/30 text-blue-300 text-[11px] font-bold px-3.5 py-1.5 rounded-full border border-blue-500/30 inline-block">
-                A Trusted V Bond Distributor
-              </span>
-
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight">
-                WELCOME TO <br />
-                <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-400 bg-clip-text text-transparent">
-                  "BEEREDDY AGENCY"
-                </span>
-              </h2>
-
-              <p className="text-xs sm:text-sm text-slate-300 font-medium">
-                Dealer Management ERP • Secure • Reliable • Professional
-              </p>
-            </div>
-          </div>
-
-          {/* Logistics & Tile Adhesives Illustrations Feature Cards */}
-          <div className="grid grid-cols-2 gap-3 pt-4">
-            <div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 flex items-center gap-3 hover:bg-slate-800 transition">
-              <div className="w-10 h-10 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-lg shrink-0">
-                <FaLayerGroup />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-white">Tile Adhesives</h4>
-                <p className="text-[10px] text-slate-400">V Bond Premium Series</p>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 flex items-center gap-3 hover:bg-slate-800 transition">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center text-lg shrink-0">
-                <FaWarehouse />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-white">Warehousing</h4>
-                <p className="text-[10px] text-slate-400">Live Inventory Audit</p>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 flex items-center gap-3 hover:bg-slate-800 transition">
-              <div className="w-10 h-10 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center text-lg shrink-0">
-                <FaTruck />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-white">Distribution</h4>
-                <p className="text-[10px] text-slate-400">Fast Retailer Dispatch</p>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 flex items-center gap-3 hover:bg-slate-800 transition">
-              <div className="w-10 h-10 rounded-xl bg-cyan-600/20 text-cyan-400 flex items-center justify-center text-lg shrink-0">
-                <FaBoxes />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-white">Stock Logistics</h4>
-                <p className="text-[10px] text-slate-400">Real-Time Stock Alerts</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Highlights */}
-          <div className="space-y-2 pt-4 border-t border-slate-800/80 text-[11px] text-slate-400 flex flex-wrap justify-between">
-            <span className="flex items-center gap-1.5"><FaCheckCircle className="text-emerald-400" /> 100% Tax Invoices</span>
-            <span className="flex items-center gap-1.5"><FaCheckCircle className="text-emerald-400" /> Instant GST Invoicing</span>
-            <span className="flex items-center gap-1.5"><FaCheckCircle className="text-emerald-400" /> 24/7 Retailer Orders</span>
           </div>
         </div>
-
-        {/* Right Side: Login Card (5 Cols) */}
-        <div className="lg:col-span-5 p-8 lg:p-12 flex flex-col justify-center bg-slate-900/95">
-          <div className="mb-6">
-            <h3 className="text-2xl font-extrabold text-white tracking-tight">Portal Login</h3>
-            <p className="text-xs text-slate-400 mt-1">Sign in with your registered mobile or email</p>
-          </div>
-
-          <form onSubmit={loginUser} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                Mobile Number or Email
-              </label>
-              <div className="relative">
-                <FaUser className="absolute left-4 top-3.5 text-slate-500 text-sm" />
-                <input
-                  type="text"
-                  placeholder="Enter mobile or email..."
-                  className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-xl pl-11 pr-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-600 font-medium"
-                  value={login}
-                  onChange={(e) => setLogin(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Password
-                </label>
-                <button
-                  type="button"
-                  onClick={() => navigate("/forgot-password")}
-                  className="text-[11px] text-blue-400 hover:text-blue-300 font-semibold transition"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-              <div className="relative">
-                <FaLock className="absolute left-4 top-3.5 text-slate-500 text-sm" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••••••"
-                  className="w-full bg-slate-950 border border-slate-800 text-white text-xs rounded-xl pl-11 pr-10 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-600 font-medium"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3.5 top-3.5 text-slate-500 hover:text-white transition"
-                  title={showPassword ? "Hide Password" : "Show Password"}
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
-              </div>
-            </div>
-
-            {/* Remember Me Checkbox */}
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="remember"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
-              />
-              <label htmlFor="remember" className="text-xs text-slate-300 font-medium cursor-pointer">
-                Remember Me on this device
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 uppercase tracking-wider disabled:opacity-50 mt-2"
-            >
-              {submitting ? (
-                <span>Verifying Credentials...</span>
-              ) : (
-                <>
-                  <span>Sign In to ERP</span>
-                  <FaArrowRight className="text-xs" />
-                </>
-              )}
-            </button>
-
-            <div className="text-center pt-6 border-t border-slate-800/80">
-              <p className="text-xs text-slate-400">
-                New Retailer / Dealer?{" "}
-                <button
-                  type="button"
-                  onClick={() => navigate("/register")}
-                  className="text-blue-400 hover:text-blue-300 font-bold transition underline"
-                >
-                  Register Dealer Account
-                </button>
-              </p>
-            </div>
-          </form>
-        </div>
-
       </div>
     </div>
   );

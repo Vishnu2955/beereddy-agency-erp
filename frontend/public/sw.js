@@ -156,6 +156,14 @@ self.addEventListener("push", (event) => {
   } catch (_) {}
 });
 
+// Message Event - Respond to SKIP_WAITING from app update prompt
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    console.log("[PWA Service Worker] Received SKIP_WAITING signal. Activating new worker...");
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const targetUrl = event.notification.data?.url || "/dashboard";

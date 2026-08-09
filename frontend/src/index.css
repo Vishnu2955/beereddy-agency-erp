@@ -98,3 +98,588 @@
     border: none !important;
   }
 }
+
+/* Card Drag-In & Character Pull/Lean Support Animation Rules */
+.auth-stage-custom {
+  width: 100%;
+  max-width: 1120px;
+  perspective: 1200px;
+  overflow: visible;
+}
+
+.auth-card-custom {
+  width: 100%;
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  box-shadow: 0 45px 140px rgba(0, 0, 0, 0.38), inset 0 1px 2px rgba(255, 255, 255, 0.6), 0 0 60px rgba(255, 120, 60, 0.25);
+  overflow: hidden;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s ease;
+}
+
+/* Login Form Panel Dragged into Center (Glassmorphic) */
+.form-panel-custom {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 36px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+  animation: dragFormIn 2.4s cubic-bezier(0.18, 0.89, 0.32, 1.18) forwards;
+}
+
+.auth-card-custom:hover {
+  transform: translateY(-5px) rotateX(1deg) rotateY(-1deg);
+  box-shadow: 0 55px 160px rgba(0, 0, 0, 0.45), 0 0 80px rgba(255, 120, 60, 0.35);
+}
+
+.card-inner-custom {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  min-height: 660px;
+}
+
+.animation-panel-custom {
+  background: linear-gradient(160deg, #ffe3c7 0%, #f9b089 50%, #ff7541 100%);
+  overflow: visible;
+  position: relative;
+  padding: 44px;
+  min-height: 540px;
+}
+
+.scene-custom {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  overflow: visible;
+  perspective: 800px;
+  margin-top: 10px;
+}
+
+.ground-custom {
+  position: absolute;
+  left: -20%;
+  bottom: 0;
+  width: 140%;
+  height: 90px;
+  background: radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.45), transparent 65%);
+  border-top: 2px dashed rgba(255, 255, 255, 0.4);
+}
+
+/* Glowing Towing Rope during drag phase */
+.pull-rope {
+  position: absolute;
+  bottom: 110px;
+  left: 30px;
+  width: 150px;
+  height: 4px;
+  background: linear-gradient(90deg, #ff5d3a, #ffffff, #ff7541);
+  box-shadow: 0 0 10px #ff5d3a;
+  border-radius: 999px;
+  z-index: 15;
+  transform-origin: left center;
+  animation: ropeFade 2.4s ease-out forwards;
+}
+
+/* 3D Floating V-Bond Adhesive Pack Cubes */
+.floating-cube-3d {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #ffffff, #ffe3c7);
+  border: 2px solid #ff7541;
+  border-radius: 12px;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.15), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 900;
+  color: #ff5d3a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: float3D 4s ease-in-out infinite alternate;
+  z-index: 10;
+}
+
+.floating-cube-3d.cube-1 {
+  top: 15%;
+  right: 12%;
+  animation-delay: 0s;
+  transform: rotate(12deg);
+}
+
+.floating-cube-3d.cube-2 {
+  top: 48%;
+  right: 5%;
+  animation-delay: 1.5s;
+  transform: rotate(-15deg) scale(0.85);
+}
+
+/* Character Pulling -> Leaning Support Position Fix */
+.character-wrapper-custom {
+  position: absolute;
+  bottom: 10px;
+  left: -180px;
+  animation: characterDragEntry 2.4s ease-out forwards, characterLeanIdle 4s ease-in-out 2.4s infinite alternate;
+  transform-origin: bottom center;
+  z-index: 20;
+}
+
+.character-custom {
+  position: relative;
+  width: 120px;
+  height: 200px;
+  transform: scale(0.85);
+  transform-origin: bottom center;
+}
+
+.shadow-custom {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  width: 90px;
+  height: 18px;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+  transform: translateX(-50%);
+  filter: blur(2px);
+  animation: shadowPulse 0.8s ease-in-out infinite alternate;
+}
+
+.head-custom {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #f7d2b4;
+  transform: translateX(-50%);
+  box-shadow: inset -7px 7px 0 rgba(0, 0, 0, 0.06), 0 6px 14px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 5;
+}
+
+.character-hair {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  background: #2b1f1d;
+  border-radius: 50% 50% 0 0;
+}
+
+.character-eyes {
+  position: absolute;
+  top: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+}
+
+.eye {
+  width: 8px;
+  height: 8px;
+  background: #1e1514;
+  border-radius: 50%;
+  animation: blinkEye 3.5s infinite;
+}
+
+.character-smile {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  width: 18px;
+  height: 9px;
+  border-bottom: 3px solid #d47b59;
+  border-radius: 0 0 12px 12px;
+  transform: translateX(-50%);
+}
+
+.torso-custom {
+  position: absolute;
+  left: 50%;
+  width: 72px;
+  height: 102px;
+  border-radius: 32px 32px 16px 16px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  transform: translateX(-50%);
+  top: 54px;
+  box-shadow: inset -6px 0 0 rgba(255, 255, 255, 0.1), 0 8px 16px rgba(0, 0, 0, 0.15);
+  z-index: 4;
+}
+
+.character-shirt {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 24px;
+  height: 38px;
+  background: #ffffff;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform: translateX(-50%);
+}
+
+.character-tie {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 10px;
+  height: 48px;
+  background: linear-gradient(180deg, #ef4444, #b91c1c);
+  clip-path: polygon(25% 0, 75% 0, 100% 80%, 50% 100%, 0 80%);
+  transform: translateX(-50%);
+}
+
+.character-belt {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 12px;
+  background: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.character-buckle {
+  width: 14px;
+  height: 10px;
+  border: 2px solid #fbbf24;
+  border-radius: 2px;
+  background: #d97706;
+}
+
+.arm-custom {
+  position: absolute;
+  top: 72px;
+  width: 24px;
+  height: 86px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  transform-origin: top center;
+  z-index: 3;
+}
+
+.arm-custom.left {
+  left: 6px;
+  transform: rotate(-28deg);
+  animation: armLeanSupport 2.4s ease-out forwards;
+}
+
+.arm-custom.right {
+  right: 6px;
+  transform: rotate(18deg);
+}
+
+.legs-custom {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 72px;
+  height: 124px;
+  transform: translateX(-50%);
+}
+
+.leg-custom {
+  position: absolute;
+  bottom: 0;
+  width: 24px;
+  height: 114px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  transform-origin: top center;
+}
+
+.leg-custom.left {
+  left: 0;
+  transform: rotate(6deg);
+  animation: legPullToCross 2.4s ease-out forwards;
+}
+
+.leg-custom.right {
+  right: 0;
+  transform: rotate(-4deg);
+}
+
+.character-shoe {
+  position: absolute;
+  bottom: 0;
+  width: 32px;
+  height: 14px;
+  background: #090d16;
+  border-radius: 12px 14px 4px 4px;
+  box-shadow: inset 0 2px 2px rgba(255, 255, 255, 0.4);
+}
+
+.leg-custom.left .character-shoe {
+  left: -4px;
+}
+
+.leg-custom.right .character-shoe {
+  right: -4px;
+}
+
+.briefcase-custom {
+  position: absolute;
+  bottom: 85px;
+  left: 12%;
+  width: 72px;
+  height: 56px;
+  background: linear-gradient(180deg, #78350f, #451a03);
+  border-radius: 12px;
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.22);
+  transform: translateX(-180px) translateY(-40px) scale(0.4);
+  animation: briefcaseIn 1.2s ease-out 1.6s forwards;
+  z-index: 6;
+}
+
+.briefcase-custom::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 16px;
+  width: 40px;
+  height: 18px;
+  background: #d97706;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.briefcase-custom::after {
+  content: '';
+  position: absolute;
+  left: 18px;
+  bottom: 14px;
+  width: 36px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Shimmer Button Effect */
+.shimmer-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 70%
+  );
+  transform: rotate(30deg);
+  animation: shimmer 3s infinite;
+}
+
+/* Keyframes for Dragging & Leaning Support Animation */
+
+@keyframes dragFormIn {
+  0% {
+    transform: translateX(100vw) rotateY(-20deg);
+    opacity: 0;
+  }
+  75% {
+    transform: translateX(-24px) rotateY(3deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes characterDragEntry {
+  0% {
+    transform: translateX(-180px) rotate(-16deg);
+  }
+  75% {
+    transform: translateX(180px) rotate(-12deg);
+  }
+  88% {
+    transform: translateX(195px) rotate(0deg);
+  }
+  100% {
+    transform: translateX(170px) rotate(8deg);
+  }
+}
+
+@keyframes characterLeanIdle {
+  0% {
+    transform: translateX(170px) translateY(0) rotate(8deg);
+  }
+  50% {
+    transform: translateX(170px) translateY(-3px) rotate(7deg);
+  }
+  100% {
+    transform: translateX(170px) translateY(0) rotate(8deg);
+  }
+}
+
+@keyframes armLeanSupport {
+  0% {
+    transform: rotate(-45deg);
+  }
+  75% {
+    transform: rotate(-40deg);
+  }
+  100% {
+    transform: rotate(-65deg); /* Arm resting against card border */
+  }
+}
+
+@keyframes legPullToCross {
+  0% {
+    transform: rotate(18deg);
+  }
+  75% {
+    transform: rotate(12deg);
+  }
+  100% {
+    transform: rotate(-8deg); /* Relaxed crossed leg pose */
+  }
+}
+
+@keyframes ropeFade {
+  0% {
+    width: 220px;
+    opacity: 1;
+  }
+  75% {
+    width: 60px;
+    opacity: 1;
+  }
+  90% {
+    width: 10px;
+    opacity: 0.5;
+  }
+  100% {
+    width: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes float3D {
+  0% {
+    transform: translateY(0px) rotate(12deg) translateZ(0);
+  }
+  100% {
+    transform: translateY(-16px) rotate(18deg) translateZ(20px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-150%) rotate(30deg);
+  }
+  100% {
+    transform: translateX(150%) rotate(30deg);
+  }
+}
+
+@keyframes blinkEye {
+  0%, 96%, 100% {
+    transform: scaleY(1);
+  }
+  98% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes shadowPulse {
+  0% {
+    transform: translateX(-50%) scaleX(1);
+    opacity: 0.18;
+  }
+  100% {
+    transform: translateX(-50%) scaleX(0.85);
+    opacity: 0.12;
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-stage-custom {
+    max-width: 100%;
+    width: 100%;
+    padding: 0;
+  }
+
+  .auth-card-custom {
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+  }
+
+  .card-inner-custom {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .animation-panel-custom {
+    min-height: 240px;
+    padding: 24px 20px 16px 20px;
+    border-radius: 28px 28px 0 0;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .scene-custom {
+    height: 170px;
+    margin-top: 4px;
+  }
+
+  .character-wrapper-custom {
+    bottom: 5px;
+    left: -120px;
+    animation: characterMobileEntry 1.8s ease-out forwards;
+  }
+
+  .character-custom {
+    transform: scale(0.65);
+    transform-origin: bottom center;
+  }
+
+  .pull-rope {
+    display: none;
+  }
+
+  .form-panel-custom {
+    padding: 24px 20px 28px 20px;
+    border-left: none;
+    border-radius: 0 0 28px 28px;
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+}
+
+@keyframes characterMobileEntry {
+  0% {
+    transform: translateX(-120px) rotate(0deg);
+  }
+  100% {
+    transform: translateX(110px) rotate(4deg);
+  }
+}
+
+
+
+
