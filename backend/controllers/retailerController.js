@@ -19,89 +19,85 @@ const addRetailer = async (req, res) => {
       creditLimit,
     } = req.body;
 
-    // Validation
-    if (!fullName || !shopName || !phone || !password) {
+    if (!fullName || !phone || !password) {
       return res.status(400).json({
         success: false,
-        message: "Full Name, Shop Name, Phone and Password are required.",
+        message: "Full Name, Phone Number, and Password are required.",
       });
     }
 
-    // Check Phone
-    const phoneExists = await User.findOne({ phone });
+    const cleanPhone = String(phone).trim();
+    const phoneExists = await User.findOne({ phone: cleanPhone });
 
     if (phoneExists) {
       return res.status(400).json({
         success: false,
-        message: "Phone number already exists.",
+        message: "Phone number already exists in system.",
       });
     }
 
-    // Check Email
-    if (email) {
-      const emailExists = await User.findOne({ email });
-
+    let cleanEmail = undefined;
+    if (email && String(email).trim() !== "") {
+      cleanEmail = String(email).trim().toLowerCase();
+      const emailExists = await User.findOne({ email: cleanEmail });
       if (emailExists) {
         return res.status(400).json({
           success: false,
-          message: "Email already exists.",
+          message: "Email address already registered.",
         });
       }
     }
 
-    // Hash Password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create Retailer
     const retailer = await User.create({
-      fullName,
-      shopName,
-      phone,
-      email,
+      fullName: String(fullName).trim(),
+      shopName: shopName && String(shopName).trim() !== "" ? String(shopName).trim() : String(fullName).trim(),
+      phone: cleanPhone,
+      email: cleanEmail,
       password: hashedPassword,
       role: "retailer",
-      address,
-      gstNumber,
-      creditLimit,
+      address: address || "",
+      gstNumber: gstNumber || "",
+      creditLimit: Number(creditLimit || 0),
       isActive: true,
     });
 
     res.status(201).json({
       success: true,
-      message: "Retailer Added Successfully",
-      retailer: {
-        _id: retailer._id,
-        fullName: retailer.fullName,
-        shopName: retailer.shopName,
-        phone: retailer.phone,
-        email: retailer.email,
-        address: retailer.address,
-        gstNumber: retailer.gstNumber,
-        creditLimit: retailer.creditLimit,
-        role: retailer.role,
-        isActive: retailer.isActive,
-        createdAt: retailer.createdAt,
-      },
+      message: "Retailer Account Created Successfully",
+      retailer,
     });
   } catch (error) {
-    console.error(error);
-
+    console.error("ADD RETAILER ERROR:", error);
     res.status(500).json({
       success: false,
-      message: "Server Error",
+      message: error.message || "Failed to create retailer account.",
     });
   }
 };
 
 const getAllRetailers = async (req, res) => {
   try {
-    const retailers = await User.find({ role: "retailer" })
+    const { search = "", page = 1, limit = 10 } = req.query;
+    const filter = { role: "retailer" };
+
+    if (search && String(search).trim() !== "") {
+      filter.$or = [
+        { fullName: { $regex: search, $options: "i" } },
+        { shopName: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const totalRetailers = await User.countDocuments(filter);
+    const retailers = await User.find(filter)
       .select("-password")
       .sort({ createdAt: -1 });
 
     const retailerData = await Promise.all(
       retailers.map(async (retailer) => {
-
         const orders = await Order.find({
           retailer: retailer._id,
           orderStatus: { $ne: "Cancelled" },
@@ -137,14 +133,13 @@ const getAllRetailers = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      totalRetailers: retailerData.length,
+      totalRetailers,
       retailers: retailerData,
-      totalPages: 1,
+      totalPages: Math.ceil(totalRetailers / Number(limit)) || 1,
     });
 
   } catch (error) {
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: "Server Error",

@@ -42,28 +42,24 @@ export default function Retailers() {
   //---------------------------------------
 
   const loadRetailers = async () => {
-
     try {
-
+      setLoading(true);
       const data = await retailerService.getRetailers(
         page,
         10,
         search
       );
 
-      setRetailers(data.retailers);
-
-      setTotalPages(data.totalPages);
-
+      setRetailers(data.retailers || []);
+      setTotalPages(data.totalPages || 1);
     } catch (err) {
-
       errorToast(
         err.response?.data?.message ||
         "Failed to load retailers."
       );
-
+    } finally {
+      setLoading(false);
     }
-
   };
 
   useEffect(() => {

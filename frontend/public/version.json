@@ -1,5 +1,5 @@
 {
-  "version": "2.7.0",
-  "buildTime": 1786273000000,
-  "message": "Security Release v2.7.0: Automatic multi-device logout & token revocation upon password change."
+  "version": "2.8.0",
+  "buildTime": 1786274000000,
+  "message": "Retailers Management Release v2.8.0: Fixed Retailers page loading state and backend Add Retailer API."
 }
