@@ -176,12 +176,14 @@ app.get("/status", (req, res) => {
   });
 });
 
-app.get("/version", (req, res) => {
+const SERVER_BUILD_TIME = Date.now();
+
+app.get(["/version", "/version.json", "/api/system/version"], (req, res) => {
   res.status(200).json({
     name: "Beereddy Agency ERP",
-    version: "1.0.0",
-    build: "100",
-    releaseDate: "2026-08-02",
+    version: "1.0.5",
+    buildTime: SERVER_BUILD_TIME,
+    releaseDate: new Date(SERVER_BUILD_TIME).toISOString(),
     environment: process.env.NODE_ENV || "production",
   });
 });

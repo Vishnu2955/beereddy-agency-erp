@@ -42,12 +42,15 @@ export function PwaProvider({ children }) {
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     window.addEventListener("appinstalled", handleAppInstalled);
 
-    // Live Build Timestamp & Version Polling for Instant Mobile Updates
+    // Live Build Timestamp & Version Polling for Instant Mobile & Web In-App Updates
     let currentBuildTime = localStorage.getItem("beereddy_app_build_time");
 
     const checkServerVersion = async () => {
       try {
-        const res = await fetch(`/version.json?t=${Date.now()}`, { cache: "no-store" });
+        let res = await fetch(`/version.json?t=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) {
+          res = await fetch(`/api/system/version?t=${Date.now()}`, { cache: "no-store" });
+        }
         if (res.ok) {
           const data = await res.json();
           if (data && data.buildTime) {
@@ -55,7 +58,7 @@ export function PwaProvider({ children }) {
               localStorage.setItem("beereddy_app_build_time", data.buildTime);
               currentBuildTime = data.buildTime;
             } else if (Number(data.buildTime) > Number(currentBuildTime)) {
-              console.log("🚀 [Instant Mobile Update Detected] Server build is newer!", data);
+              console.log("🚀 [Instant Mobile/Web Update Detected] Server build is newer!", data);
               setUpdateAvailable(true);
               setShowUpdateModal(true);
             }
