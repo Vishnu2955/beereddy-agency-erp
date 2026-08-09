@@ -1,5 +1,5 @@
 {
-  "version": "2.5.0",
-  "buildTime": 1786267000000,
-  "message": "Final ERP Release: Add Retailer button fix, Shop Avatar photos, Category navigation & Commercial Product Specs Modal."
+  "version": "2.7.0",
+  "buildTime": 1786273000000,
+  "message": "Security Release v2.7.0: Automatic multi-device logout & token revocation upon password change."
 }

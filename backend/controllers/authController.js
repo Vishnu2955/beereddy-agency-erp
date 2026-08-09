@@ -202,6 +202,7 @@ const loginUser = async (req, res) => {
       {
         id: user._id,
         role: user.role,
+        tokenVersion: user.tokenVersion || 0,
       },
       process.env.JWT_SECRET,
       {
@@ -387,6 +388,7 @@ const resetPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     user.password = hashedPassword;
+    user.tokenVersion = (user.tokenVersion || 0) + 1; // Log out from all active devices!
     user.otp = null;
     user.otpExpires = null;
 

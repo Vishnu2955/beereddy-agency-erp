@@ -35,7 +35,9 @@ export default function ResetPassword() {
       });
 
       if (res.data?.success !== false) {
-        successToast("Password reset successfully! Please sign in with your new password.");
+        localStorage.clear();
+        sessionStorage.clear();
+        successToast("🔒 Password changed successfully! You have been logged out from all active devices for security reasons. Please sign in with your new password.");
         navigate("/", { replace: true });
       } else {
         errorToast(res.data?.message || "Reset failed. Please try again.");
