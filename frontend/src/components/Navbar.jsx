@@ -245,10 +245,16 @@ export default function Navbar({
         <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white shadow-md ${
-                isRetailer ? "bg-gradient-to-tr from-emerald-600 to-teal-500" : "bg-gradient-to-tr from-indigo-600 to-blue-600"
-              }`}>
-                {displayName.substring(0, 2).toUpperCase()}
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center font-bold text-sm text-white shadow-md border border-amber-500/40 bg-slate-800 shrink-0">
+                <img 
+                  src={user?.avatarUrl || user?.logo || "/icon-192.png"} 
+                  alt="Shop Avatar" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/icon-192.png";
+                  }}
+                />
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
             </div>

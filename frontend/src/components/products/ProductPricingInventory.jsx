@@ -35,7 +35,7 @@ export default function ProductPricingInventory({ formData, handleChange }) {
 
         <div>
           <label className="block mb-1.5 font-bold text-slate-800">
-            Selling Price (B2B Distributor) (₹) *
+            Standard Selling Price (1-20 Units) (₹) *
           </label>
           <input
             type="number"
@@ -46,6 +46,38 @@ export default function ProductPricingInventory({ formData, handleChange }) {
             onChange={handleChange}
             required
             className="w-full border border-slate-300 rounded-xl p-2.5 outline-none focus:border-blue-500 font-mono font-bold text-blue-700"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1.5 font-bold text-amber-700">
+            Tier 2 Bulk Price (21-100 Units) (₹)
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            name="bulkTier2Price"
+            value={formData.bulkTier2Price}
+            onChange={handleChange}
+            placeholder="e.g. ₹440"
+            className="w-full border border-amber-300 bg-amber-50/50 rounded-xl p-2.5 outline-none focus:border-amber-500 font-mono font-bold text-amber-800"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1.5 font-bold text-emerald-700">
+            Tier 3 Truckload Price (100+ Units) (₹)
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            name="bulkTier3Price"
+            value={formData.bulkTier3Price}
+            onChange={handleChange}
+            placeholder="e.g. ₹410"
+            className="w-full border border-emerald-300 bg-emerald-50/50 rounded-xl p-2.5 outline-none focus:border-emerald-500 font-mono font-bold text-emerald-800"
           />
         </div>
 

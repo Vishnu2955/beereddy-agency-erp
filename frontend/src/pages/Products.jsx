@@ -15,6 +15,7 @@ import { successToast, errorToast } from "../utils/toast";
 import { confirmDelete } from "../utils/confirm";
 
 import ProductMediaModal from "../components/products/ProductMediaModal";
+import ProductDetailModal from "../components/products/ProductDetailModal";
 import SkeletonLoader from "../components/common/SkeletonLoader";
 
 export default function Products() {
@@ -30,6 +31,10 @@ export default function Products() {
   const [deleteModal, setDeleteModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [mediaModalProduct, setMediaModalProduct] = useState(null);
+
+  // Commercial Product Details Modal State
+  const [detailProduct, setDetailProduct] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // 3D Viewer & Cart States
   const [selected3DProduct, setSelected3DProduct] = useState(null);
@@ -214,6 +219,10 @@ export default function Products() {
             products={products}
             onAddToCart={handleAddToCart}
             onView3D={handleView3D}
+            onSelectProduct={(p) => {
+              setDetailProduct(p);
+              setIsDetailModalOpen(true);
+            }}
           />
         ) : (
           <ProductTable
@@ -223,6 +232,10 @@ export default function Products() {
             onAddToCart={handleAddToCart}
             onView3D={handleView3D}
             onOpenMedia={(p) => setMediaModalProduct(p)}
+            onSelectProduct={(p) => {
+              setDetailProduct(p);
+              setIsDetailModalOpen(true);
+            }}
           />
         )
       )}
@@ -275,6 +288,15 @@ export default function Products() {
           }}
         />
       )}
+
+      {/* Rich Commercial Product Detail & Specs Modal */}
+      <ProductDetailModal
+        product={detailProduct}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        onAddToCart={handleAddToCart}
+        onOrderNow={() => setIsCartOpen(true)}
+      />
 
       {/* 3D & 360 Product Viewer Modal */}
       <Product3DViewerModal

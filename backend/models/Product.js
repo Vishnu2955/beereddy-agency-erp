@@ -50,6 +50,21 @@ const productSchema = new mongoose.Schema(
       default: 0,
     },
 
+    bulkTier1Price: {
+      type: Number,
+      default: 0, // 1-20 bags standard price
+    },
+
+    bulkTier2Price: {
+      type: Number,
+      default: 0, // 21-100 bags medium bulk price
+    },
+
+    bulkTier3Price: {
+      type: Number,
+      default: 0, // 100+ bags truckload bulk price
+    },
+
     gst: {
       type: Number,
       default: 18,

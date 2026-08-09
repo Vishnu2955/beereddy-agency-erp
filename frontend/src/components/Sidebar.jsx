@@ -170,10 +170,16 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
         {/* User Profile Footer Card */}
         <div className="p-4 border-t border-slate-800/80 bg-slate-950/40 space-y-3">
           <div className="flex items-center gap-3 px-2 py-1.5">
-            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shadow-md border ${
-              isRetailer ? "bg-emerald-950 text-emerald-300 border-emerald-800/50" : "bg-indigo-950 text-indigo-300 border-indigo-800/50"
-            }`}>
-              {userInitials}
+            <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center font-bold text-xs shadow-md border border-amber-500/40 bg-slate-800 shrink-0">
+              <img 
+                src={user?.avatarUrl || user?.logo || "/icon-192.png"} 
+                alt="Shop Avatar" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/icon-192.png";
+                }}
+              />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-white truncate">{displayName}</p>

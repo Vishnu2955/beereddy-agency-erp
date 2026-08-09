@@ -7,6 +7,7 @@ export default function ProductGrid({
   products = [],
   onAddToCart,
   onView3D,
+  onSelectProduct,
 }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("default");
@@ -105,18 +106,20 @@ export default function ProductGrid({
           const discountPct = product.mrp > product.sellingPrice
             ? Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100)
             : 0;
+          const imagePath = product.image ? (product.image.startsWith("http") ? product.image : `${IMAGE_BASE_URL}${product.image}`) : null;
 
           return (
             <div
-              key={product._id}
-              className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200 overflow-hidden flex flex-col justify-between group"
+              key={product._id || product.id}
+              className="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group dynamic-card-3d cursor-pointer"
+              onClick={() => onSelectProduct && onSelectProduct(product)}
             >
               <div>
-                {/* Image Box */}
-                <div className="relative h-48 bg-slate-50 overflow-hidden flex items-center justify-center p-4">
-                  {product.image ? (
+                {/* Image Header */}
+                <div className="relative bg-slate-50 p-6 h-52 flex items-center justify-center border-b border-slate-100 overflow-hidden">
+                  {imagePath ? (
                     <img
-                      src={product.image.startsWith("http") ? product.image : `${IMAGE_BASE_URL}${product.image}`}
+                      src={imagePath}
                       alt={product.productName}
                       className="max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
                     />
@@ -155,7 +158,7 @@ export default function ProductGrid({
                     {product.category || "General"}
                   </span>
 
-                  <h3 className="font-bold text-slate-800 text-base mt-2 line-clamp-1 group-hover:text-blue-600 transition">
+                  <h3 className="font-bold text-slate-800 text-base mt-2 line-clamp-1 group-hover:text-amber-600 transition">
                     {product.productName}
                   </h3>
 
@@ -181,7 +184,7 @@ export default function ProductGrid({
               </div>
 
               {/* Card Footer Controls */}
-              <div className="p-5 pt-0 space-y-3">
+              <div className="p-5 pt-0 space-y-3" onClick={(e) => e.stopPropagation()}>
                 {/* Qty Selector & 3D Button */}
                 <div className="flex items-center gap-2">
                   <div className="flex items-center border rounded-xl bg-slate-50 border-slate-200 overflow-hidden">

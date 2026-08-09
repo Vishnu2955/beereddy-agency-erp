@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import {
@@ -13,9 +14,11 @@ import {
   FaFlask,
   FaTools,
   FaLayerGroup,
+  FaArrowRight,
 } from "react-icons/fa";
 
 export default function Categories() {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -131,11 +134,12 @@ export default function Categories() {
           {categories.map((cat) => (
             <div
               key={cat._id}
-              className="bg-slate-900 border border-slate-800 hover:border-indigo-500/40 rounded-3xl p-6 shadow-xl transition-all duration-300 flex flex-col justify-between space-y-4 group"
+              onClick={() => navigate(`/products?search=${encodeURIComponent(cat.name)}`)}
+              className="bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 flex flex-col justify-between space-y-4 group cursor-pointer active:scale-98"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center text-xl border border-indigo-500/30 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl border border-amber-500/30 group-hover:scale-110 transition-transform">
                     <FaLayerGroup />
                   </div>
                   <span
@@ -150,8 +154,9 @@ export default function Categories() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-extrabold text-white group-hover:text-indigo-300 transition-colors">
-                    {cat.name}
+                  <h3 className="text-lg font-extrabold text-white group-hover:text-amber-400 transition-colors flex items-center gap-2">
+                    <span>{cat.name}</span>
+                    <FaArrowRight className="text-xs opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-amber-400" />
                   </h3>
                   <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                     {cat.description || "No description provided."}
@@ -160,22 +165,22 @@ export default function Categories() {
               </div>
 
               <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
-                  <FaBoxOpen className="text-indigo-400" />
-                  <span>{cat.productCount || 0} Products</span>
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
+                  <FaBoxOpen />
+                  <span>Browse Products</span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => handleOpenEdit(cat)}
-                    className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+                    className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition cursor-pointer"
                     title="Edit Category"
                   >
                     <FaEdit />
                   </button>
                   <button
                     onClick={() => handleDelete(cat)}
-                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
+                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition cursor-pointer"
                     title="Delete Category"
                   >
                     <FaTrashAlt />
