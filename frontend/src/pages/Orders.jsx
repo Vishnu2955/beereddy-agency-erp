@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaClipboardList, FaPlus, FaShoppingBag, FaSearch, FaFilter } from "react-icons/fa";
 
 import orderService from "../services/orderService";
@@ -27,7 +27,7 @@ export default function Orders() {
   const [search, setSearch] = useState("");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -73,11 +73,13 @@ export default function Orders() {
     }
   };
 
+  const location = useLocation();
+
   useEffect(() => {
     loadOrders();
     loadRetailers();
     loadProducts();
-  }, [page, search]);
+  }, [page, search, location.pathname]);
 
   // Client-side status tab filter (case-insensitive)
   const filteredOrders = useMemo(() => {

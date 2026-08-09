@@ -1,17 +1,22 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { getToken, getUser } from "../utils/auth";
 import { useAuth } from "../context/AuthContext";
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = () => {
   const { user: contextUser, token: contextToken } = useAuth();
-  
+
   const token = contextToken || getToken();
   let user = contextUser || getUser();
 
-  console.log("[ProtectedRoute] Checking Auth -> Token:", token ? "PRESENT" : "MISSING", "User:", user ? user.phone || user.email : "MISSING");
+  console.log(
+    "[ProtectedRoute] Checking Auth -> Token:",
+    token ? "PRESENT" : "MISSING",
+    "User:",
+    user ? user.phone || user.email : "MISSING"
+  );
 
-  // Step 5 Requirement: If token exists but user is missing, restore user from localStorage
+  // Restore user object from localStorage if needed
   if (token && !user) {
     user = getUser();
     console.log("[ProtectedRoute] Restored user object from localStorage:", user);
@@ -22,7 +27,8 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/" replace />;
   }
 
-  return children;
+  // Render nested routes via Outlet so Router controls child mounting
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

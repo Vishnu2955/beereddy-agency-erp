@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import retailerService from "../services/retailerService";
 
@@ -33,7 +34,8 @@ export default function Retailers() {
 
   const [selectedRetailer, setSelectedRetailer] = useState(null);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   //---------------------------------------
   // Load Retailers
@@ -67,8 +69,8 @@ export default function Retailers() {
   useEffect(() => {
 
     loadRetailers();
-
-  }, [page, search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, search, location.pathname]);
 
   //---------------------------------------
   // Add Retailer

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -13,6 +13,7 @@ import api from "../services/api";
 import { getUser } from "../utils/auth";
 
 export default function AdminLayout() {
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [showSetupWizard, setShowSetupWizard] = useState(false);
@@ -59,7 +60,7 @@ export default function AdminLayout() {
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
-          <Outlet />
+          <Outlet key={location.pathname} />
         </main>
       </div>
 

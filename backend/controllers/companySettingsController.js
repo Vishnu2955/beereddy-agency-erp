@@ -40,6 +40,11 @@ const updateCompanySettings = async (req, res) => {
       lastUpdatedAt: new Date(),
     };
 
+    // If a file was uploaded (logo), attach its path
+    if (req.file) {
+      updateData.logo = `/uploads/${req.file.filename}`;
+    }
+
     if (req.body.isSetupCompleted !== undefined) {
       updateData.isSetupCompleted = Boolean(req.body.isSetupCompleted);
     }

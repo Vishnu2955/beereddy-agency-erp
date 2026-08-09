@@ -11,9 +11,7 @@ export const saveAuth = (token, user) => {
 
 export const getToken = () => {
   try {
-    const token = localStorage.getItem("token");
-    console.log("[getToken] Retrieved token:", token ? `${token.substring(0, 15)}...` : null);
-    return token;
+    return localStorage.getItem("token");
   } catch (err) {
     console.error("[getToken] Error reading token:", err);
     return null;

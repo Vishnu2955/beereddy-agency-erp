@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/config/base_url.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/services/api_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -20,12 +23,81 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void initState() {
     super.initState();
     _urlController = TextEditingController(text: BaseUrlConfig.baseUrl);
+    // fetch current company settings (logo) for admin preview
+    Future.microtask(() => _fetchCompanySettings());
   }
 
   @override
   void dispose() {
     _urlController.dispose();
     super.dispose();
+  }
+
+  String? _logoUrl;
+
+  Widget _buildLogoPreview() {
+    final size = 48.0;
+    if (_logoUrl == null) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(Icons.image_outlined, color: Colors.grey),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.network(
+        _logoUrl!,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          width: size,
+          height: size,
+          color: Colors.grey.shade100,
+          child: const Icon(Icons.broken_image_outlined, color: Colors.grey),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _fetchCompanySettings() async {
+    try {
+      final api = ref.read(apiServiceProvider);
+      final res = await api.get('/settings/company');
+      final settings = res['settings'] ?? res;
+      final logo = settings['logo'] as String?;
+      if (logo != null) {
+        final url = logo.startsWith('/') ? '${BaseUrlConfig.baseUrl}$logo' : logo;
+        setState(() => _logoUrl = url);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _pickAndUploadIcon() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512, imageQuality: 90);
+    if (picked == null) return;
+
+    final file = File(picked.path);
+    try {
+      final api = ref.read(apiServiceProvider);
+      final res = await api.uploadFile('/settings/company', file.path, 'logo', method: 'put');
+      if (res != null && res['success'] == true) {
+        // Refresh local preview
+        await _fetchCompanySettings();
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('App icon updated successfully')));
+      } else {
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Upload failed')));
+      }
+    } catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload error: ${e.toString()}')));
+    }
   }
 
   void _showChangeUrlDialog() {
@@ -84,6 +156,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Admin App Icon management
+          Consumer(
+            builder: (context, ref, _) {
+              final auth = ref.watch(authProvider);
+              final isAdmin = auth.user?.role == 'admin';
+              return Visibility(
+                visible: isAdmin,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Branding', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryTeal)),
+                    const SizedBox(height: 8),
+                    Card(
+                      child: ListTile(
+                        leading: _buildLogoPreview(),
+                        title: const Text('App Icon (Admin)'),
+                        subtitle: const Text('Upload a square icon to be used inside the app UI'),
+                        trailing: ElevatedButton(
+                          onPressed: () => _pickAndUploadIcon(),
+                          child: const Text('Change'),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              );
+            },
+          ),
           // Appearance Section
           const Text('Appearance', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryTeal)),
           const SizedBox(height: 8),

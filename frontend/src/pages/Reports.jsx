@@ -22,21 +22,22 @@ const [paymentStatus, setPaymentStatus] = useState("");
 
   const [search, setSearch] = useState("");
   const [retailerFilter, setRetailerFilter] = useState("");
-const loadPayments = useCallback(async () => {
-  try {
-    const res = await api.get("/payments");
+  const loadPayments = async () => {
+    try {
+      const res = await api.get("/payments");
 
-    if (res.data.success) {
-      setPayments(res.data.payments || []);
+      if (res.data.success) {
+        setPayments(res.data.payments || []);
+      }
+    } catch (err) {
+      console.error("Failed to load payments", err);
     }
-  } catch (err) {
-    console.error("Failed to load payments", err);
-  }
-}, []);
+  };
+
   useEffect(() => {
-  loadReports();
-  loadPayments();
-}, [loadPayments]);
+    loadReports();
+    loadPayments();
+  }, []);
 
   const loadReports = async () => {
     try {

@@ -4,11 +4,23 @@ import 'package:go_router/go_router.dart';
 import '../../providers/order_provider.dart';
 import '../../widgets/common_widgets.dart';
 
-class OrderHistoryScreen extends ConsumerWidget {
+class OrderHistoryScreen extends ConsumerStatefulWidget {
   const OrderHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
+}
+
+class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Ensure orders are fetched when the screen is opened
+    Future.microtask(() => ref.read(orderProvider.notifier).fetchOrders());
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final orderState = ref.watch(orderProvider);
 
     return Scaffold(

@@ -56,38 +56,33 @@ function App() {
 
 
         {/* Protected ERP Routes */}
-        <Route
-          element={
-            <ProtectedRoute>
-              <AdminLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/company-profile" element={<CompanyProfile />} />
-          <Route path="/backup-restore" element={<BackupRestore />} />
-          <Route path="/retailers" element={<Retailers />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/invoices" element={<Invoices />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/settings/notifications/whatsapp" element={<Settings />} />
-          <Route path="/invoice/:id" element={<Invoice />} />
-          <Route path="/payments" element={<Payments />} />
-          <Route path="/outstanding" element={<Outstanding />} />
-          <Route path="/outstanding/:id" element={<Outstanding />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/audit-logs" element={<AuditLogs />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/security-dashboard" element={<SecurityDashboard />} />
-          <Route path="/security-settings" element={<SecuritySettings />} />
-          <Route path="/mobile-settings" element={<MobileSettings />} />
-          <Route path="/system-status" element={<SystemStatus />} />
-          <Route path="/system-diagnostics" element={<SystemDiagnostics />} />
-          <Route path="/about" element={<About />} />
-
+        <Route element={<ProtectedRoute />}> 
+          <Route element={<AdminLayout />}> 
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/company-profile" element={<CompanyProfile />} />
+            <Route path="/backup-restore" element={<BackupRestore />} />
+            <Route path="/retailers" element={<Retailers />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/notifications/whatsapp" element={<Settings />} />
+            <Route path="/invoice/:id" element={<Invoice />} />
+            <Route path="/payments" element={<Payments />} />
+            <Route path="/outstanding" element={<Outstanding />} />
+            <Route path="/outstanding/:id" element={<Outstanding />} />
+            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/audit-logs" element={<AuditLogs />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/security-dashboard" element={<SecurityDashboard />} />
+            <Route path="/security-settings" element={<SecuritySettings />} />
+            <Route path="/mobile-settings" element={<MobileSettings />} />
+            <Route path="/system-status" element={<SystemStatus />} />
+            <Route path="/system-diagnostics" element={<SystemDiagnostics />} />
+            <Route path="/about" element={<About />} />
+          </Route>
         </Route>
 
         {/* Redirect unknown routes */}

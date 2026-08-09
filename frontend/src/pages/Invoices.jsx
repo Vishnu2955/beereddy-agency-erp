@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -16,77 +16,37 @@ export default function Invoices() {
   const navigate = useNavigate();
 
   const [orders, setOrders] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState([]);
-
   const [loading, setLoading] = useState(true);
-
   const [search, setSearch] = useState("");
 
   const currentUser = getUser();
   const isRetailer = currentUser?.role === "retailer";
 
   useEffect(() => {
-
     loadInvoices();
-
   }, []);
 
-  useEffect(() => {
-
-    if (!search.trim()) {
-
-      setFilteredOrders(orders);
-
-      return;
-
-    }
-
+  const filteredOrders = useMemo(() => {
+    if (!search.trim()) return orders;
     const keyword = search.toLowerCase();
-
-    setFilteredOrders(
-
-      orders.filter((order) => {
-
-        return (
-
-          order.invoiceNumber
-            ?.toLowerCase()
-            .includes(keyword) ||
-
-          order.retailer?.shopName
-            ?.toLowerCase()
-            .includes(keyword) ||
-
-          order.retailer?.fullName
-            ?.toLowerCase()
-            .includes(keyword)
-
-        );
-
-      })
-
-    );
-
+    return orders.filter((order) => {
+      return (
+        order.invoiceNumber?.toLowerCase().includes(keyword) ||
+        order.retailer?.shopName?.toLowerCase().includes(keyword) ||
+        order.retailer?.fullName?.toLowerCase().includes(keyword)
+      );
+    });
   }, [search, orders]);
 
   const loadInvoices = async () => {
-
     try {
-
       setLoading(true);
-
       const data = isRetailer
         ? await orderService.getMyOrders()
         : await orderService.getOrders(1, 1000);
-
       setOrders(data.orders || []);
-
-      setFilteredOrders(data.orders || []);
-
     } catch (err) {
-
       console.error(err);
-
     } finally {
 
       setLoading(false);

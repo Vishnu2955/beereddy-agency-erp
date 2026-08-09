@@ -7,15 +7,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => getUser());
   const [token, setToken] = useState(() => getToken());
 
-  // Keep state in sync with localStorage on mount & updates
+  // Keep state in sync with localStorage on mount if missing
   useEffect(() => {
-    const currentToken = getToken();
-    const currentUser = getUser();
-    if (currentToken && currentToken !== token) {
-      setToken(currentToken);
+    if (!token) {
+      const currentToken = getToken();
+      if (currentToken) setToken(currentToken);
     }
-    if (currentUser && JSON.stringify(currentUser) !== JSON.stringify(user)) {
-      setUser(currentUser);
+    if (!user) {
+      const currentUser = getUser();
+      if (currentUser) setUser(currentUser);
     }
   }, []);
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import productService from "../services/productService";
 import SearchBar from "../components/products/SearchBar";
 import Pagination from "../components/products/Pagination";
@@ -39,12 +40,14 @@ export default function Products() {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Sync cart to localStorage
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
+
+  const location = useLocation();
 
   // Load Products
   const loadProducts = async () => {
@@ -62,7 +65,9 @@ export default function Products() {
 
   useEffect(() => {
     loadProducts();
-  }, [page, search]);
+    // Trigger a refresh any time the route becomes active or paging/search changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, search, location.pathname]);
 
   const handleAdd = () => {
     setSelectedProduct(null);

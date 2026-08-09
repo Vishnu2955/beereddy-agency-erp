@@ -21,7 +21,7 @@ import {
   FaDatabase,
   FaLayerGroup,
 } from "react-icons/fa";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getUser, logout } from "../utils/auth";
 
 const menuGroups = [
@@ -69,6 +69,7 @@ const menuGroups = [
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = getUser();
   const role = user?.role || "admin";
   const isRetailer = role === "retailer";
@@ -76,6 +77,11 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  const handleItemClick = (path) => {
+    setSidebarOpen(false);
+    navigate(path);
   };
 
   const displayName = user?.shopName || user?.fullName || (isRetailer ? "Valued Retailer" : "Agency Admin");
@@ -135,30 +141,27 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   {group.title}
                 </p>
 
-                {visibleItems.map((item) => (
-                  <NavLink
-                    key={item.name}
-                    to={item.path}
-                    onClick={() => {
-                      setSidebarOpen(false);
-                      window.scrollTo({ top: 0, behavior: "instant" });
-                    }}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-150 touch-manipulation group ${
+                {visibleItems.map((item) => {
+                  const isActive = location.pathname === item.path || (item.path !== "/" && location.pathname.startsWith(item.path + "/"));
+                  return (
+                    <button
+                      key={item.name}
+                      onClick={() => handleItemClick(item.path)}
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all duration-150 touch-manipulation group text-left cursor-pointer ${
                         isActive
                           ? isRetailer
                             ? "bg-emerald-600/15 text-emerald-300 font-bold border border-emerald-500/30 shadow-sm"
                             : "bg-indigo-600/15 text-indigo-300 font-bold border border-indigo-500/30 shadow-sm"
                           : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/60"
-                      }`
-                    }
-                  >
-                    <span className={`text-base transition-transform duration-200 group-hover:scale-110`}>
-                      {item.icon}
-                    </span>
-                    <span className="truncate">{item.name}</span>
-                  </NavLink>
-                ))}
+                      }`}
+                    >
+                      <span className="text-base transition-transform duration-200 group-hover:scale-110">
+                        {item.icon}
+                      </span>
+                      <span className="truncate">{item.name}</span>
+                    </button>
+                  );
+                })}
               </div>
             );
           })}

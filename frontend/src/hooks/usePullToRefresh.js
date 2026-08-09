@@ -6,6 +6,7 @@ export function usePullToRefresh(onRefresh) {
   const [pullDistance, setPullDistance] = useState(0);
   const startYRef = useRef(0);
   const isPullingRef = useRef(false);
+  const pullDistRef = useRef(0);
 
   useEffect(() => {
     const handleTouchStart = (e) => {
@@ -23,6 +24,7 @@ export function usePullToRefresh(onRefresh) {
       if (diff > 0 && window.scrollY === 0) {
         // Resistance factor
         const distance = Math.min(diff * 0.4, 80);
+        pullDistRef.current = distance;
         setPullDistance(distance);
       }
     };
@@ -31,7 +33,7 @@ export function usePullToRefresh(onRefresh) {
       if (!isPullingRef.current) return;
       isPullingRef.current = false;
 
-      if (pullDistance > 60) {
+      if (pullDistRef.current > 60) {
         hapticTap();
         setRefreshing(true);
         setPullDistance(60);
@@ -42,10 +44,12 @@ export function usePullToRefresh(onRefresh) {
           setTimeout(() => {
             setRefreshing(false);
             setPullDistance(0);
+            pullDistRef.current = 0;
           }, 400);
         }
       } else {
         setPullDistance(0);
+        pullDistRef.current = 0;
       }
     };
 
@@ -58,7 +62,7 @@ export function usePullToRefresh(onRefresh) {
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [onRefresh, pullDistance]);
+  }, [onRefresh]);
 
   return { refreshing, pullDistance };
 }

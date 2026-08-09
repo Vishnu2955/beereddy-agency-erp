@@ -96,7 +96,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [query, user]);
+  }, [query, user?.role]);
 
   if (!isOpen) return null;
 

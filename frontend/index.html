@@ -50,41 +50,48 @@
 
       // PWA Service Worker Registration with Automatic Update Refresh
       if ('serviceWorker' in navigator) {
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!refreshing) {
-            refreshing = true;
-            console.log("⚡ New Service Worker activated. Reloading page for updated content...");
-            window.location.reload();
-          }
-        });
+        const isLocalhost = Boolean(
+          window.location.hostname === 'localhost' ||
+          window.location.hostname === '[::1]' ||
+          window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
+        );
 
-        window.addEventListener('load', async () => {
-          try {
-            const registration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
-            console.log('✅ Service Worker registered successfully:', registration.scope);
-
-            if (registration.waiting) {
-              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        if (isLocalhost) {
+          // Unregister SW on localhost to prevent dev cache collisions
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (let reg of registrations) {
+              reg.unregister();
             }
-
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-              if (!newWorker) return;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
-                }
-              });
-            });
-
-            if (navigator.serviceWorker.controller) {
-              navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+          });
+        } else {
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              refreshing = true;
+              console.log("⚡ New Service Worker activated. Reloading page for updated content...");
+              window.location.reload();
             }
-          } catch (err) {
-            console.warn('Service Worker registration warning:', err);
-          }
-        });
+          });
+
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+              .then((reg) => {
+                console.log('✅ PWA Service Worker registered:', reg.scope);
+                reg.onupdatefound = () => {
+                  const installingWorker = reg.installing;
+                  if (installingWorker) {
+                    installingWorker.onstatechange = () => {
+                      if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        console.log('🔄 New version detected! Triggering skipWaiting...');
+                        installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                      }
+                    };
+                  }
+                };
+              })
+              .catch((err) => console.warn('Service Worker registration error:', err));
+          });
+        }
       }
     </script>
   </body>

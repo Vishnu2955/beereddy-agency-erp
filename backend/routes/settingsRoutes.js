@@ -56,7 +56,7 @@ router.post("/whatsapp/test", verifyToken, isAdmin, testWhatsAppNotification);
 
 // Company Settings Routes
 router.get("/company", getCompanySettings);
-router.put("/company", verifyToken, isAdmin, updateCompanySettings);
+router.put("/company", verifyToken, isAdmin, upload.single("logo"), updateCompanySettings);
 router.post("/company/reset-wizard", verifyToken, isAdmin, resetSetupWizard);
 
 // Reset ERP Route

@@ -85,13 +85,19 @@ class ApiService {
   }
 
   // Multipart Form Upload (for payment screenshots, product images)
-  Future<dynamic> uploadFile(String path, String filePath, String fieldName, {Map<String, dynamic>? extraData}) async {
+  Future<dynamic> uploadFile(String path, String filePath, String fieldName,
+      {Map<String, dynamic>? extraData, String method = 'post'}) async {
     try {
       final formData = FormData.fromMap({
         fieldName: await MultipartFile.fromFile(filePath),
         if (extraData != null) ...extraData,
       });
-      final response = await _dio.post(path, data: formData);
+      Response response;
+      if (method.toLowerCase() == 'put') {
+        response = await _dio.put(path, data: formData);
+      } else {
+        response = await _dio.post(path, data: formData);
+      }
       return response.data;
     } catch (e) {
       throw Exception(ApiErrorHandler.getErrorMessage(e));

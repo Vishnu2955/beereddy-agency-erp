@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Now | BEEREDDY AGENCY</title>
+  <link rel="stylesheet" href="register.css">
+</head>
+<body>
+  <div class="auth-stage">
+    <div class="auth-card">
+      <div class="card-inner">
+        <div class="animation-panel">
+          <div class="scene">
+            <div class="ground"></div>
+            <div class="character-wrapper" aria-hidden="true">
+              <div class="character">
+                <div class="shadow"></div>
+                <div class="legs">
+                  <div class="leg left"></div>
+                  <div class="leg right"></div>
+                </div>
+                <div class="torso"></div>
+                <div class="head"></div>
+                <div class="arm left"></div>
+                <div class="arm right"></div>
+              </div>
+            </div>
+            <div class="briefcase"></div>
+          </div>
+        </div>
+
+        <div class="form-panel">
+          <div class="form-intro">
+            <p class="eyebrow">Join the team</p>
+            <h1>Register Now</h1>
+            <p class="subtitle">Create your account and move to the next step with confidence.</p>
+          </div>
+
+          <form id="registerForm" class="register-form" novalidate>
+            <div class="field-group">
+              <span class="field-icon user-icon" aria-hidden="true"></span>
+              <input type="text" id="fullName" name="fullName" placeholder="Full Name" required>
+            </div>
+
+            <div class="field-group">
+              <span class="field-icon mail-icon" aria-hidden="true"></span>
+              <input type="email" id="email" name="email" placeholder="Email Address" required>
+            </div>
+
+            <div class="field-group password-field hidden">
+              <span class="field-icon lock-icon" aria-hidden="true"></span>
+              <input type="password" id="password" name="password" placeholder="Choose a password" minlength="6" required>
+            </div>
+
+            <p class="form-error" id="formError" aria-live="polite"></p>
+            <button type="submit" class="btn-submit">NEXT</button>
+          </form>
+
+          <p class="powered-by">Powered by BEEREDDY AGENCY</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="register.js"></script>
+</body>
+</html>
