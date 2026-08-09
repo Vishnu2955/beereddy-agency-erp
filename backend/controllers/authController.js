@@ -2,6 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
+const sendSms = require("../utils/sendSms");
 const { recordAuditLog } = require("../middleware/auditLogger");
 
 // ==============================
@@ -251,59 +252,80 @@ const loginUser = async (req, res) => {
 };
 
 // ==============================
-// Send Email OTP
+// Send Email & Mobile Phone OTP
 // ==============================
 const sendOtp = async (req, res) => {
   try {
-    const { email } = req.body;
+    const input = (req.body.login || req.body.email || req.body.phone || "").trim();
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!input) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter your registered Email address or Mobile Phone number.",
+      });
+    }
+
+    const isEmail = input.includes("@");
+    let user;
+
+    if (isEmail) {
+      user = await User.findOne({ email: input.toLowerCase() });
+    } else {
+      user = await User.findOne({ phone: input });
+    }
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "Email is not registered",
+        message: `No account registered with specified ${isEmail ? "Email" : "Phone number"}.`,
       });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     user.otp = otp;
-    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     await user.save();
 
-    await sendEmail(
-      user.email,
-      "Beereddy ERP - Password Reset OTP",
-      `
-      <div style="font-family:Arial,sans-serif">
-        <h2>Beereddy ERP</h2>
+    // 1. Dispatch Normal SMS to Mobile Phone Inbox
+    const smsRes = await sendSms(user.phone, otp);
 
-        <p>Your password reset OTP is:</p>
-
-        <h1 style="letter-spacing:4px;color:#2563eb;">
-          ${otp}
-        </h1>
-
-        <p>This OTP is valid for <b>5 minutes</b>.</p>
-
-        <p>If you didn't request this, you can ignore this email.</p>
-      </div>
-      `
-    );
+    // Try sending Email if user email exists
+    let emailSent = false;
+    if (user.email) {
+      const emailRes = await sendEmail(
+        user.email,
+        "Beereddy ERP - Password Reset OTP Code",
+        `
+        <div style="font-family:Arial,sans-serif;padding:20px;background:#f8fafc;border-radius:12px;">
+          <h2 style="color:#1e3a8a;">BEEREDDY AGENCY ERP</h2>
+          <p>Hello <b>${user.fullName}</b>,</p>
+          <p>Your password reset 6-digit OTP security code is:</p>
+          <h1 style="letter-spacing:6px;color:#2563eb;font-size:32px;background:#e0e7ff;padding:10px 20px;display:inline-block;border-radius:8px;">
+            ${otp}
+          </h1>
+          <p>Registered Phone: <b>${user.phone}</b></p>
+          <p>This OTP is valid for <b>10 minutes</b>.</p>
+          <p>If you did not request this, please ignore this message.</p>
+        </div>
+        `
+      );
+      emailSent = emailRes && emailRes.success;
+    }
 
     res.json({
       success: true,
-      message: "OTP sent successfully",
+      message: `OTP code sent successfully to Mobile Phone (${user.phone}) ${user.email ? `and Email (${user.email})` : ''}!`,
+      phone: user.phone,
+      email: user.email,
     });
 
   } catch (err) {
-    console.error(err);
-
+    console.error("Send OTP Error:", err);
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: err.message || "Failed to send OTP code.",
     });
   }
 };
@@ -313,36 +335,45 @@ const sendOtp = async (req, res) => {
 // ==============================
 const verifyOtp = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const input = (req.body.login || req.body.email || req.body.phone || "").trim();
+    const otp = (req.body.otp || "").trim();
 
-    const user = await User.findOne({
-      email: email.toLowerCase(),
-    });
+    if (!input || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Email / Phone and OTP are required.",
+      });
+    }
+
+    const isEmail = input.includes("@");
+    const user = isEmail
+      ? await User.findOne({ email: input.toLowerCase() })
+      : await User.findOne({ phone: input });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: "User not found.",
       });
     }
 
     if (!user.otp || String(user.otp).trim() !== String(otp).trim()) {
       return res.status(400).json({
         success: false,
-        message: "Invalid OTP",
+        message: "Invalid OTP security code.",
       });
     }
 
-    if (user.otpExpires < new Date()) {
+    if (user.otpExpires && user.otpExpires < new Date()) {
       return res.status(400).json({
         success: false,
-        message: "OTP has expired",
+        message: "OTP code has expired. Please request a new one.",
       });
     }
 
     res.json({
       success: true,
-      message: "OTP verified successfully",
+      message: "OTP verified successfully.",
     });
 
   } catch (err) {
@@ -358,37 +389,47 @@ const verifyOtp = async (req, res) => {
 // ==============================
 const resetPassword = async (req, res) => {
   try {
-    const { email, otp, password } = req.body;
+    const input = (req.body.login || req.body.email || req.body.phone || "").trim();
+    const otp = (req.body.otp || "").trim();
+    const password = req.body.password;
 
-    const user = await User.findOne({
-      email: email.toLowerCase(),
-    });
+    if (!input || !otp || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "User identifier, OTP code, and new Password are required.",
+      });
+    }
+
+    const isEmail = input.includes("@");
+    const user = isEmail
+      ? await User.findOne({ email: input.toLowerCase() })
+      : await User.findOne({ phone: input });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: "User not found.",
       });
     }
 
-    if (user.otp !== otp) {
+    if (!user.otp || String(user.otp).trim() !== String(otp).trim()) {
       return res.status(400).json({
         success: false,
-        message: "Invalid OTP",
+        message: "Invalid OTP security code.",
       });
     }
 
-    if (user.otpExpires < new Date()) {
+    if (user.otpExpires && user.otpExpires < new Date()) {
       return res.status(400).json({
         success: false,
-        message: "OTP expired",
+        message: "OTP code has expired.",
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     user.password = hashedPassword;
-    user.tokenVersion = (user.tokenVersion || 0) + 1; // Log out from all active devices!
+    user.tokenVersion = (user.tokenVersion || 0) + 1; // Invalidate old login sessions
     user.otp = null;
     user.otpExpires = null;
 
@@ -396,7 +437,7 @@ const resetPassword = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Password reset successfully",
+      message: "Password reset successfully. You can now log in with your new password.",
     });
 
   } catch (err) {

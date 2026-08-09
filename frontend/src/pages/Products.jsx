@@ -127,17 +127,18 @@ export default function Products() {
     }
   };
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = (product, quantityToAdd = 1) => {
+    const qty = typeof quantityToAdd === "number" && quantityToAdd > 0 ? quantityToAdd : 1;
     setCart((prevCart) => {
       const existing = prevCart.find((item) => item._id === product._id);
       if (existing) {
         return prevCart.map((item) =>
-          item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+          item._id === product._id ? { ...item, quantity: item.quantity + qty } : item
         );
       }
-      return [...prevCart, { ...product, quantity: 1 }];
+      return [...prevCart, { ...product, quantity: qty }];
     });
-    successToast(`${product.productName} added to cart.`);
+    successToast(`Added ${qty} bag(s) of ${product.productName || product.name} to cart.`);
   };
 
   const handleView3D = (product) => {

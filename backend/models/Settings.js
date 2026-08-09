@@ -59,7 +59,7 @@ const settingsSchema = new mongoose.Schema(
     // Banking & Payment Details
     adminPayee: {
       type: String,
-      default: "B UPENDER REDDY",
+      default: "Beereddy Upendar Reddy",
     },
     upiVpa: {
       type: String,

@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import api from "../services/api";
+import { INDIAN_BANKS } from "../utils/banks";
+import { compressImageFile } from "../utils/imageCompressor";
 import {
   FaPalette,
   FaQrcode,
@@ -136,24 +139,46 @@ export default function Settings() {
     e.preventDefault();
     setSavingPayment(true);
     setPaymentMsg({ type: "", text: "" });
-    try {
-      const formData = new FormData();
-      Object.keys(paymentSettings).forEach((key) => {
-        if (key !== "qrImage") formData.append(key, paymentSettings[key]);
-      });
-      if (qrFile) formData.append("qrImage", qrFile);
 
-      const res = await api.put("/settings/payment-details", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+    try {
+      let qrImageData = paymentSettings.qrImage || "/admin_qr.jpg";
+
+      if (qrFile) {
+        try {
+          qrImageData = await compressImageFile(qrFile, 800, 0.85);
+        } catch (imgErr) {
+          console.warn("Could not compress image, reading raw DataURL...", imgErr);
+          qrImageData = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => resolve(paymentSettings.qrImage || "/admin_qr.jpg");
+            reader.readAsDataURL(qrFile);
+          });
+        }
+      }
+
+      const payload = {
+        adminPayee: paymentSettings.accountName || paymentSettings.adminPayee || "Beereddy Upendar Reddy",
+        accountName: paymentSettings.accountName || "VENNAPUSA VISHNUVARDHAN REDDY",
+        bankName: paymentSettings.bankName || "State Bank of India (SBI)",
+        accountNumber: paymentSettings.accountNumber || "43175299261",
+        ifsc: paymentSettings.ifsc || "SBIN0020167",
+        branch: paymentSettings.branch || "wyra",
+        upiVpa: paymentSettings.upiVpa || "vihnu732s@axl",
+        qrImage: qrImageData,
+      };
+
+      const res = await api.put("/settings/payment-details", payload);
 
       if (res.data.success) {
-        setPaymentMsg({ type: "success", text: "Payment details & QR code updated successfully!" });
+        setPaymentMsg({ type: "success", text: "⚡ Payment details & QR code updated successfully!" });
         setPaymentSettings(res.data.settings);
         setQrFile(null);
       }
     } catch (err) {
-      setPaymentMsg({ type: "error", text: err.response?.data?.message || "Failed to update payment settings." });
+      console.error("Save Payment Error:", err);
+      const errDetail = err.response?.data?.message || err.message || "Failed to update payment settings.";
+      setPaymentMsg({ type: "error", text: errDetail });
     } finally {
       setSavingPayment(false);
     }
@@ -579,64 +604,71 @@ export default function Settings() {
             <div className="space-y-4">
               <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200">Bank Account & UPI Info</h3>
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Account Holder Name</label>
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1">Account Holder Name</label>
                 <input
                   type="text"
                   value={paymentSettings.accountName}
                   onChange={(e) => setPaymentSettings({ ...paymentSettings, accountName: e.target.value })}
-                  className="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs"
+                  className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Bank Name</label>
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1">Bank Name</label>
                 <input
                   type="text"
+                  list="settings-bank-list"
                   value={paymentSettings.bankName}
                   onChange={(e) => setPaymentSettings({ ...paymentSettings, bankName: e.target.value })}
-                  className="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs"
+                  placeholder="Select or type Bank Name (e.g. State Bank of India)"
+                  className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
+                <datalist id="settings-bank-list">
+                  {INDIAN_BANKS.map((b) => (
+                    <option key={b} value={b} />
+                  ))}
+                </datalist>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Account Number</label>
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1">Account Number</label>
                   <input
                     type="text"
                     value={paymentSettings.accountNumber}
                     onChange={(e) => setPaymentSettings({ ...paymentSettings, accountNumber: e.target.value })}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-mono"
+                    className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">IFSC Code</label>
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1">IFSC Code</label>
                   <input
                     type="text"
                     value={paymentSettings.ifsc}
                     onChange={(e) => setPaymentSettings({ ...paymentSettings, ifsc: e.target.value })}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-mono uppercase"
+                    className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono uppercase outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Branch</label>
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1">Branch</label>
                   <input
                     type="text"
                     value={paymentSettings.branch || ""}
                     onChange={(e) => setPaymentSettings({ ...paymentSettings, branch: e.target.value })}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs"
+                    className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">UPI ID (VPA)</label>
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 block mb-1">UPI ID (VPA)</label>
                   <input
                     type="text"
                     value={paymentSettings.upiVpa}
                     onChange={(e) => setPaymentSettings({ ...paymentSettings, upiVpa: e.target.value })}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-mono"
+                    className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>

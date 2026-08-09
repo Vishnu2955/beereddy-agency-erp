@@ -6,28 +6,37 @@ import { successToast, errorToast } from "../utils/toast";
 import VbondTruck3D from "../components/common/VbondTruck3D";
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const sendOTP = async (e) => {
     if (e) e.preventDefault();
-    if (!email) {
-      return errorToast("Please enter your registered email address.");
+    const loginVal = login.trim();
+    if (!loginVal) {
+      return errorToast("Please enter your registered email address or phone number.");
     }
 
     try {
       setLoading(true);
-      const res = await api.post("/auth/send-otp", { email });
+      const res = await api.post("/auth/send-otp", { login: loginVal });
 
       if (res.data?.success !== false) {
-        successToast("OTP code sent successfully to your email!");
-        navigate("/verify-otp", { state: { email } });
+        const msg = res.data?.message || "OTP code sent to your registered phone number & email!";
+        successToast(msg);
+
+        navigate("/verify-otp", {
+          state: {
+            email: res.data?.email || (loginVal.includes("@") ? loginVal : ""),
+            phone: res.data?.phone || (!loginVal.includes("@") ? loginVal : ""),
+            login: loginVal,
+          },
+        });
       } else {
         errorToast(res.data?.message || "Failed to send OTP code.");
       }
     } catch (err) {
-      errorToast(err.response?.data?.message || "Failed to send OTP. Please check email address.");
+      errorToast(err.response?.data?.message || "Failed to send OTP. Please check your email or mobile phone number.");
     } finally {
       setLoading(false);
     }
@@ -100,18 +109,18 @@ export default function ForgotPassword() {
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                    Registered Email Address
+                    Registered Email Address or Phone Number
                   </label>
                   <div className="relative">
                     <div className="absolute left-4 top-3.5 text-amber-500">
                       <FaEnvelope className="text-sm" />
                     </div>
                     <input
-                      type="email"
-                      placeholder="name@company.com"
+                      type="text"
+                      placeholder="e.g. name@company.com or 9876543210"
                       className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs rounded-2xl pl-11 pr-4 py-3.5 outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all placeholder:text-slate-400 font-semibold"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      value={login}
+                      onChange={(e) => setLogin(e.target.value)}
                       autoComplete="off"
                       required
                     />

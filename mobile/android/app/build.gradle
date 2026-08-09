@@ -21,15 +21,24 @@ android {
 
     defaultConfig {
         applicationId = "com.beereddy.agency"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 24
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        release {
+            keyAlias 'beereddykey'
+            keyPassword 'Beereddy2026!'
+            storeFile file('key.jks')
+            storePassword 'Beereddy2026!'
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug
+            signingConfig signingConfigs.release
         }
     }
 }

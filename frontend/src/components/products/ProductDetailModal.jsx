@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaTimes, FaStar, FaBox, FaLayerGroup, FaCheckCircle, FaShoppingCart, FaTruck, FaShieldAlt, FaInfoCircle, FaClock } from "react-icons/fa";
 import { successToast } from "../../utils/toast";
 
@@ -6,11 +6,17 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToCa
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("specs");
 
+  useEffect(() => {
+    if (isOpen) {
+      setQuantity(1);
+    }
+  }, [isOpen, product]);
+
   if (!isOpen || !product) return null;
 
   const handleAddToCart = () => {
-    onAddToCart && onAddToCart(product, quantity);
-    successToast(`Added ${quantity} bag(s) of ${product.name || product.productName} to cart!`);
+    const qty = Number(quantity) > 0 ? Number(quantity) : 1;
+    onAddToCart && onAddToCart(product, qty);
     onClose();
   };
 
@@ -223,14 +229,26 @@ export default function ProductDetailModal({ product, isOpen, onClose, onAddToCa
           <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center gap-3">
             <div className="flex items-center bg-slate-800 rounded-2xl border border-slate-700 p-1">
               <button
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                onClick={() => setQuantity((q) => Math.max(1, (Number(q) || 1) - 1))}
                 className="w-9 h-9 flex items-center justify-center text-white font-bold text-lg rounded-xl hover:bg-slate-700 transition cursor-pointer"
               >
                 -
               </button>
-              <span className="w-12 text-center text-sm font-extrabold text-white">{quantity}</span>
+              <input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setQuantity(isNaN(val) || val < 1 ? "" : val);
+                }}
+                onBlur={() => {
+                  if (!quantity || Number(quantity) < 1) setQuantity(1);
+                }}
+                className="w-16 text-center text-sm font-black text-white bg-slate-900 border border-slate-700 rounded-xl py-1.5 px-1 outline-none focus:ring-2 focus:ring-amber-500 font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
               <button
-                onClick={() => setQuantity((q) => q + 1)}
+                onClick={() => setQuantity((q) => (Number(q) || 0) + 1)}
                 className="w-9 h-9 flex items-center justify-center text-white font-bold text-lg rounded-xl hover:bg-slate-700 transition cursor-pointer"
               >
                 +

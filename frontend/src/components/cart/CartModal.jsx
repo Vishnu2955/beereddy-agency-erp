@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { FaTimes, FaTrash, FaQrcode, FaCheckCircle, FaShoppingBag, FaArrowRight } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { FaTimes, FaTrash, FaQrcode, FaCheckCircle, FaShoppingBag, FaArrowRight, FaShieldAlt } from "react-icons/fa";
 import api from "../../services/api";
 import { getUser } from "../../utils/auth";
 import { successToast, errorToast } from "../../utils/toast";
@@ -12,8 +12,23 @@ export default function CartModal({ isOpen, onClose, cart, setCart, onOrderPlace
   const [txnId, setTxnId] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
-  const [upiVpaInput, setUpiVpaInput] = useState("bupenderreddy@ybl");
-  const [testAmount, setTestAmount] = useState(null);
+  const [adminSettings, setAdminSettings] = useState({
+    adminPayee: "Beereddy Upendar Reddy",
+    qrImage: "/admin_qr.jpg",
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      api
+        .get("/settings/payment-details")
+        .then((res) => {
+          if (res.data?.settings) {
+            setAdminSettings(res.data.settings);
+          }
+        })
+        .catch((err) => console.log("Failed to load payment settings:", err));
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -86,12 +101,6 @@ export default function CartModal({ isOpen, onClose, cart, setCart, onOrderPlace
       setLoading(false);
     }
   };
-
-  const payAmount = testAmount !== null ? testAmount : grandTotalAmount;
-  const upiVpa = upiVpaInput.trim() || "beereddyagency@ybl";
-  const upiName = "Beereddy Agency ERP";
-  const rawUpiPayload = `upi://pay?pa=${upiVpa}&pn=${encodeURIComponent(upiName)}&am=${payAmount}&cu=INR`;
-  const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(rawUpiPayload)}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -251,50 +260,39 @@ export default function CartModal({ isOpen, onClose, cart, setCart, onOrderPlace
 
               {/* QR / UPI Display Area */}
               {paymentMethod === "QR / UPI Payment" && (
-                <div className="bg-slate-900 text-white p-5 rounded-2xl flex flex-col sm:flex-row items-center gap-6 border border-slate-800">
-                  <div className="bg-white p-2 rounded-xl shadow-lg flex-shrink-0 flex flex-col items-center gap-2">
-                    <img src="/admin_qr.jpg" alt="Official Admin QR Code" className="w-40 h-40 rounded-lg object-contain" />
-                    <a
-                      href={rawUpiPayload}
-                      className="bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold px-2 py-1 rounded-lg w-full text-center shadow"
-                    >
-                      📱 Open UPI App
-                    </a>
+                <div className="bg-slate-900 text-white p-5 rounded-2xl flex flex-col sm:flex-row items-center gap-6 border border-slate-800 shadow-xl">
+                  <div className="bg-white p-2.5 rounded-2xl shadow-lg flex-shrink-0 flex flex-col items-center">
+                    <img
+                      src={adminSettings.qrImage || "/admin_qr.jpg"}
+                      alt="Official Admin QR Code"
+                      className="w-44 h-44 rounded-xl object-contain"
+                    />
                   </div>
 
-                  <div className="space-y-2 flex-1 text-center sm:text-left">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-semibold">
-                        <FaCheckCircle /> Scan with PhonePe / GPay / Paytm
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setTestAmount(testAmount === 1 ? null : 1)}
-                        className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30 text-xs font-bold px-2.5 py-0.5 rounded-full border border-yellow-500/30 transition"
-                      >
-                        {testAmount === 1 ? "Reset Order Amount" : "⚡ Set ₹1 Test Amount"}
-                      </button>
+                  <div className="space-y-3 flex-1 text-center sm:text-left">
+                    <div className="inline-flex items-center gap-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3.5 py-1.5 rounded-full text-xs font-bold">
+                      <FaCheckCircle className="text-blue-400" /> Pay to: {adminSettings.adminPayee || "Beereddy Upendar Reddy"}
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-xs text-slate-400">Payee UPI VPA ID (Editable):</label>
-                      <input
-                        type="text"
-                        value={upiVpaInput}
-                        onChange={(e) => setUpiVpaInput(e.target.value)}
-                        placeholder="e.g. beereddyagency@ybl"
-                        className="w-full max-w-xs bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-blue-300 font-mono font-bold outline-none focus:border-blue-500"
-                      />
+                    <div className="p-3.5 rounded-xl bg-slate-800/90 border border-slate-700 text-xs text-slate-300 space-y-1.5">
+                      <p className="font-semibold text-white">
+                        Scan the QR code posted by Admin and pay to <span className="text-blue-400 font-bold">{adminSettings.adminPayee || "Beereddy Upendar Reddy"}</span>.
+                      </p>
+                      <p className="text-emerald-400 font-bold">
+                        Once Admin ({adminSettings.adminPayee || "Beereddy Upendar Reddy"}) approves your payment, your payment status will get succeeded.
+                      </p>
                     </div>
 
-                    <div className="pt-2">
-                      <label className="block text-xs text-slate-400 mb-1">Transaction Ref / UTR No. (Optional)</label>
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1 font-semibold">
+                        Transaction Ref / UTR No. (Optional)
+                      </label>
                       <input
                         type="text"
                         placeholder="e.g. 329847192847"
                         value={txnId}
                         onChange={(e) => setTxnId(e.target.value)}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-blue-500"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500 font-mono"
                       />
                     </div>
                   </div>

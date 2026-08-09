@@ -1,4 +1,3 @@
-const axios = require("axios");
 const Settings = require("../models/Settings");
 
 /**
@@ -59,9 +58,9 @@ const sendWhatsAppOrderNotification = async (orderData, retailerUser) => {
     // Dispatch via background HTTP API Gateway
     try {
       const encodedMsg = encodeURIComponent(messageText);
-      await axios.get(
+      await fetch(
         `https://api.callmebot.com/whatsapp.php?phone=${digitsOnly}&text=${encodedMsg}&apikey=123456`,
-        { timeout: 4000 }
+        { signal: AbortSignal.timeout(4000) }
       ).catch(() => {});
     } catch (_) {}
 

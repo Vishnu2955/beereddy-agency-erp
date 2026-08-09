@@ -56,12 +56,13 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-// Allow only Admin
+// Allow Admin & Authorized Managers
 const isAdmin = (req, res, next) => {
-  if (req.user.role !== "admin") {
+  const role = (req.user?.role || "").toLowerCase();
+  if (role !== "admin" && role !== "superadmin" && role !== "owner" && role !== "distributor") {
     return res.status(403).json({
       success: false,
-      message: "Access denied. Admin only.",
+      message: `Access denied. Admin permissions required (Your role: ${req.user?.role || "user"}).`,
     });
   }
 

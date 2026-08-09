@@ -40,12 +40,17 @@ const { resetErp } = require("../controllers/adminController");
 // Public / Auth: Get current bank and QR details
 router.get("/payment-details", getPaymentSettings);
 
-// Admin Only: Update bank and QR details
+// Admin Only: Update bank and QR details (supports both JSON Base64 & Multipart File)
 router.put(
   "/payment-details",
   verifyToken,
   isAdmin,
-  upload.single("qrImage"),
+  (req, res, next) => {
+    if (req.is("multipart/form-data")) {
+      return upload.single("qrImage")(req, res, next);
+    }
+    next();
+  },
   updatePaymentSettings
 );
 

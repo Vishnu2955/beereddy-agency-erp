@@ -9,7 +9,9 @@ export default function VerifyOtp() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const email = location.state?.email || "";
+  const login = location.state?.login || location.state?.email || location.state?.phone || "";
+  const email = location.state?.email || (login.includes("@") ? login : "");
+  const phone = location.state?.phone || (!login.includes("@") ? login : "");
 
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
@@ -78,14 +80,15 @@ export default function VerifyOtp() {
     try {
       setLoading(true);
       const res = await api.post("/auth/verify-otp", {
-        email,
+        login,
+        email: login,
         otp: fullOtp,
       });
 
       if (res.data?.success !== false) {
         successToast("✅ Security OTP verified successfully!");
         navigate("/reset-password", {
-          state: { email, otp: fullOtp },
+          state: { login, email: login, otp: fullOtp },
         });
       } else {
         errorToast(res.data?.message || "Invalid OTP code.");
@@ -98,16 +101,16 @@ export default function VerifyOtp() {
   };
 
   const handleResendOtp = async () => {
-    if (!email) {
-      return errorToast("Email address missing. Please request OTP again.");
+    if (!login) {
+      return errorToast("Identifier missing. Please request OTP again.");
     }
 
     try {
       setResending(true);
-      await api.post("/auth/send-otp", { email });
-      successToast("✅ A new 6-digit OTP code has been sent to your email!");
-      setTimer(60);
+      await api.post("/auth/send-otp", { login });
+      successToast("✅ A new 6-digit OTP code has been dispatched!");
       setDigits(["", "", "", "", "", ""]);
+      setTimer(60);
       inputRefs.current[0]?.focus();
     } catch (err) {
       errorToast(err.response?.data?.message || "Failed to resend OTP.");
@@ -150,7 +153,7 @@ export default function VerifyOtp() {
                     Verify Your 6-Digit PIN.
                   </h2>
                   <p className="text-xs text-white/90 font-medium max-w-sm leading-relaxed">
-                    Check your email inbox at <span className="font-bold underline">{email || "registered account"}</span>
+                    Check your phone SMS / email inbox for <span className="font-bold underline">{phone || email || login || "registered account"}</span>
                   </p>
                 </div>
               </div>

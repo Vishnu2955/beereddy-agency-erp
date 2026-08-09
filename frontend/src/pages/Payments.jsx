@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 import { getUser } from "../utils/auth";
 import { successToast, errorToast } from "../utils/toast";
+import { INDIAN_BANKS } from "../utils/banks";
+import { compressImageFile } from "../utils/imageCompressor";
 import PaymentGatewayModal from "../components/payments/PaymentGatewayModal";
 import SkeletonLoader from "../components/common/SkeletonLoader";
 import UiverseCheckoutCard from "../components/payments/UiverseCheckoutCard";
@@ -44,16 +46,17 @@ export default function PaymentReport() {
   // Admin Settings Modal State
   const [isAdminSettingsOpen, setIsAdminSettingsOpen] = useState(false);
   const [adminSettings, setAdminSettings] = useState({
-    adminPayee: "B UPENDER REDDY",
+    adminPayee: "Beereddy Upendar Reddy",
     upiVpa: "bupenderreddy@ybl",
     bankName: "State Bank of India",
-    accountName: "B UPENDER REDDY (BEEREDDY AGENCY)",
+    accountName: "Beereddy Upendar Reddy (BEEREDDY AGENCY)",
     accountNumber: "40982341902",
     ifsc: "SBIN0020145",
     qrImage: "/admin_qr.jpg",
   });
   const [qrFile, setQrFile] = useState(null);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [gatewayMethod, setGatewayMethod] = useState("qr");
 
   const [form, setForm] = useState({
     retailer: "",
@@ -65,7 +68,7 @@ export default function PaymentReport() {
     notes: "",
   });
 
-  const paymentMethods = ["Cash", "UPI", "Bank Transfer", "Cheque", "Card"];
+  const paymentMethods = ["Official QR Code", "Cash on Delivery"];
   const paymentStatuses = ["Pending", "Approved", "Rejected"];
 
   const loadPayments = async () => {
@@ -111,20 +114,24 @@ export default function PaymentReport() {
     e.preventDefault();
     try {
       setSavingSettings(true);
-      const formData = new FormData();
-      formData.append("adminPayee", adminSettings.adminPayee);
-      formData.append("upiVpa", adminSettings.upiVpa);
-      formData.append("bankName", adminSettings.bankName);
-      formData.append("accountName", adminSettings.accountName);
-      formData.append("accountNumber", adminSettings.accountNumber);
-      formData.append("ifsc", adminSettings.ifsc);
+
+      let qrImageData = adminSettings.qrImage;
       if (qrFile) {
-        formData.append("qrImage", qrFile);
+        qrImageData = await compressImageFile(qrFile, 800, 0.85);
       }
 
-      const res = await api.put("/settings/payment-details", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const payload = {
+        adminPayee: adminSettings.accountName || adminSettings.adminPayee || "Beereddy Upendar Reddy",
+        accountName: adminSettings.accountName,
+        bankName: adminSettings.bankName,
+        accountNumber: adminSettings.accountNumber,
+        ifsc: adminSettings.ifsc,
+        branch: adminSettings.branch,
+        upiVpa: adminSettings.upiVpa,
+        qrImage: qrImageData,
+      };
+
+      const res = await api.put("/settings/payment-details", payload);
 
       if (res.data?.settings) {
         setAdminSettings(res.data.settings);
@@ -133,7 +140,7 @@ export default function PaymentReport() {
       setIsAdminSettingsOpen(false);
       setQrFile(null);
     } catch (err) {
-      console.error(err);
+      console.error("Save Admin Settings Error:", err);
       errorToast(err.response?.data?.message || "Failed to update bank & QR details.");
     } finally {
       setSavingSettings(false);
@@ -412,7 +419,7 @@ export default function PaymentReport() {
           {isRetailer && (
             <button
               onClick={() => {
-                setSelectedOrderForGateway(unpaidRetailerOrders[0] || null);
+                setSelectedOrderForGateway(unpaidRetailerOrders[0] || { invoiceNumber: "GENERAL", totalAmount: metrics.outstandingBalance || 0 });
                 setIsGatewayOpen(true);
               }}
               className="w-full sm:w-auto bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-extrabold px-6 py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider"
@@ -480,7 +487,7 @@ export default function PaymentReport() {
             <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
               <button
                 onClick={() => {
-                  setSelectedOrderForGateway(unpaidRetailerOrders[0] || null);
+                  setSelectedOrderForGateway(unpaidRetailerOrders[0] || { invoiceNumber: "GENERAL", totalAmount: metrics.outstandingBalance || 0 });
                   setIsGatewayOpen(true);
                 }}
                 className="w-full sm:w-auto bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-extrabold px-6 py-3.5 rounded-2xl shadow-xl transition text-xs uppercase tracking-wider flex items-center justify-center gap-2"
@@ -491,11 +498,11 @@ export default function PaymentReport() {
           </div>
 
           {/* UIVERSE CHECKOUT & PAYMENT CARD (From Uiverse.io by mi-series) */}
-          <div className="flex justify-center my-6">
+          <div className="flex justify-center my-6 overflow-visible px-2">
             <UiverseCheckoutCard
               title="RETAILER CHECKOUT & DUE PAYMENT"
               shippingAddress={currentUser?.address || "Registered Business Store Address, Beereddy Network"}
-              paymentMethod="Official QR / UPI / Bank Transfer"
+              paymentMethod={gatewayMethod === "cod" ? "Cash on Delivery (COD)" : "Official Admin QR Code"}
               paymentDetail="BEEREDDY AGENCY ERP • GST Billing"
               subtotal={metrics.totalOrdersAmount}
               shipping={0}
@@ -506,100 +513,123 @@ export default function PaymentReport() {
                 if (code) successToast(`Promo code '${code}' submitted for admin review!`);
               }}
               onCheckout={() => {
-                setSelectedOrderForGateway(unpaidRetailerOrders[0] || null);
+                setGatewayMethod("qr");
+                setSelectedOrderForGateway(unpaidRetailerOrders[0] || { invoiceNumber: "GENERAL", totalAmount: metrics.outstandingBalance || 0 });
                 setIsGatewayOpen(true);
               }}
               buttonText="Pay Due Now"
             />
           </div>
 
-          {/* WIDE RANGE OF E-COMMERCE PAYMENT OPTIONS TILES */}
+          {/* SUPPORTED PAYMENT OPTIONS TILES (ONLY QR & COD) */}
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-4">
             <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
-              <FaCreditCard className="text-rose-600" /> Supported Payment Gateways & Options
+              <FaCreditCard className="text-rose-600" /> Supported Payment Methods
             </h3>
-            <p className="text-xs text-slate-500">Select any method below to pay your pending invoices instantly:</p>
+            <p className="text-xs text-slate-500">Select any official method below to make payment or place order:</p>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
               
-              {/* Option 1: 1-Tap UPI Apps */}
+              {/* Option 1: Official QR Code */}
               <button
                 onClick={() => {
-                  setSelectedOrderForGateway(unpaidRetailerOrders[0] || null);
+                  setGatewayMethod("qr");
+                  setSelectedOrderForGateway(unpaidRetailerOrders[0] || { invoiceNumber: "GENERAL", totalAmount: metrics.outstandingBalance || 0 });
                   setIsGatewayOpen(true);
                 }}
-                className="p-4 rounded-2xl bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-amber-900 transition flex flex-col items-center text-center space-y-2 group shadow-sm"
+                className="p-5 rounded-2xl bg-purple-50 hover:bg-purple-100/80 border border-purple-200 text-purple-900 transition flex items-center gap-4 group shadow-sm text-left cursor-pointer"
               >
-                <FaBolt className="text-2xl text-amber-600 group-hover:scale-110 transition-transform" />
-                <span className="font-extrabold text-xs">Recommended UPI</span>
-                <span className="text-[10px] text-amber-700 font-semibold">GPay / PhonePe / Paytm</span>
+                <div className="p-3 bg-purple-600 text-white rounded-xl group-hover:scale-110 transition-transform">
+                  <FaQrcode className="text-2xl" />
+                </div>
+                <div>
+                  <span className="font-extrabold text-sm block">Official Admin QR Code</span>
+                  <span className="text-xs text-purple-700 font-medium">Scan & Pay to Beereddy Upendar Reddy</span>
+                </div>
               </button>
 
-              {/* Option 2: Dynamic QR */}
+              {/* Option 2: Cash on Delivery (COD) */}
               <button
                 onClick={() => {
-                  setSelectedOrderForGateway(unpaidRetailerOrders[0] || null);
+                  setGatewayMethod("cod");
+                  setSelectedOrderForGateway(unpaidRetailerOrders[0] || { invoiceNumber: "GENERAL", totalAmount: metrics.outstandingBalance || 0 });
                   setIsGatewayOpen(true);
                 }}
-                className="p-4 rounded-2xl bg-purple-50 hover:bg-purple-100/80 border border-purple-200 text-purple-900 transition flex flex-col items-center text-center space-y-2 group shadow-sm"
+                className="p-5 rounded-2xl bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-900 transition flex items-center gap-4 group shadow-sm text-left cursor-pointer"
               >
-                <FaQrcode className="text-2xl text-purple-600 group-hover:scale-110 transition-transform" />
-                <span className="font-extrabold text-xs">Scan NPCI QR Code</span>
-                <span className="text-[10px] text-purple-700 font-semibold">Live Timer QR Code</span>
+                <div className="p-3 bg-emerald-600 text-white rounded-xl group-hover:scale-110 transition-transform">
+                  <FaMoneyBillAlt className="text-2xl" />
+                </div>
+                <div>
+                  <span className="font-extrabold text-sm block">Cash on Delivery</span>
+                  <span className="text-xs text-emerald-700 font-medium">Pay Cash Upon Goods Delivery</span>
+                </div>
               </button>
 
-              {/* Option 3: Credit / Debit Card */}
-              <button
-                onClick={() => {
-                  setSelectedOrderForGateway(unpaidRetailerOrders[0] || null);
-                  setIsGatewayOpen(true);
-                }}
-                className="p-4 rounded-2xl bg-blue-50 hover:bg-blue-100/80 border border-blue-200 text-blue-900 transition flex flex-col items-center text-center space-y-2 group shadow-sm"
-              >
-                <FaCreditCard className="text-2xl text-blue-600 group-hover:scale-110 transition-transform" />
-                <span className="font-extrabold text-xs">Credit / Debit Cards</span>
-                <span className="text-[10px] text-blue-700 font-semibold">Visa, Master, RuPay</span>
-              </button>
+            </div>
 
-              {/* Option 4: Net Banking */}
-              <button
-                onClick={() => {
-                  setSelectedOrderForGateway(unpaidRetailerOrders[0] || null);
-                  setIsGatewayOpen(true);
-                }}
-                className="p-4 rounded-2xl bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200 text-indigo-900 transition flex flex-col items-center text-center space-y-2 group shadow-sm"
-              >
-                <FaUniversity className="text-2xl text-indigo-600 group-hover:scale-110 transition-transform" />
-                <span className="font-extrabold text-xs">Net Banking</span>
-                <span className="text-[10px] text-indigo-700 font-semibold">SBI, HDFC, ICICI, Axis</span>
-              </button>
+            {/* Official Admin Bank Account & QR Code Info Card (Visible to Every Retailer) */}
+            <div className="mt-6 p-5 rounded-3xl bg-slate-900 text-white border border-slate-800 shadow-lg grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              <div className="flex flex-col items-center justify-center p-3 bg-white rounded-2xl border border-slate-700 shrink-0">
+                <img
+                  src={adminSettings.qrImage || "/admin_qr.jpg"}
+                  alt="Official Admin QR Code"
+                  className="w-44 h-44 object-contain rounded-xl"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/admin_qr.jpg";
+                  }}
+                />
+                <span className="text-[10px] font-black text-slate-800 mt-2 uppercase tracking-wider">Official Admin QR</span>
+              </div>
 
-              {/* Option 5: Wallets */}
-              <button
-                onClick={() => {
-                  setSelectedOrderForGateway(unpaidRetailerOrders[0] || null);
-                  setIsGatewayOpen(true);
-                }}
-                className="p-4 rounded-2xl bg-teal-50 hover:bg-teal-100/80 border border-teal-200 text-teal-900 transition flex flex-col items-center text-center space-y-2 group shadow-sm"
-              >
-                <FaWallet className="text-2xl text-teal-600 group-hover:scale-110 transition-transform" />
-                <span className="font-extrabold text-xs">Wallets</span>
-                <span className="text-[10px] text-teal-700 font-semibold">Paytm, PhonePe, Mobikwik</span>
-              </button>
+              <div className="space-y-2 md:col-span-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full font-black uppercase text-[10px] tracking-wider">
+                    Official Admin Payee
+                  </span>
+                  <span className="text-slate-400 font-semibold">• Beereddy Agency Verified</span>
+                </div>
 
-              {/* Option 6: COD */}
-              <button
-                onClick={() => {
-                  setSelectedOrderForGateway(unpaidRetailerOrders[0] || null);
-                  setIsGatewayOpen(true);
-                }}
-                className="p-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-900 transition flex flex-col items-center text-center space-y-2 group shadow-sm"
-              >
-                <FaMoneyBillAlt className="text-2xl text-emerald-600 group-hover:scale-110 transition-transform" />
-                <span className="font-extrabold text-xs">Cash on Delivery</span>
-                <span className="text-[10px] text-emerald-700 font-semibold">Pay Cash Upon Delivery</span>
-              </button>
+                <h4 className="text-lg font-black text-white">
+                  Pay to: {adminSettings.adminPayee || "Beereddy Upendar Reddy"}
+                </h4>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Bank Name</span>
+                    <span className="font-extrabold text-white text-xs">{adminSettings.bankName || "State Bank of India"}</span>
+                  </div>
+                  <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Account Holder</span>
+                    <span className="font-extrabold text-white text-xs">{adminSettings.accountName || "BEEREDDY UPENDAR REDDY (BEEREDDY AGENCY)"}</span>
+                  </div>
+                  <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">Account Number</span>
+                    <span className="font-extrabold text-amber-400 text-xs font-mono">{adminSettings.accountNumber || "40982341902"}</span>
+                  </div>
+                  <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/80">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">IFSC Code</span>
+                    <span className="font-extrabold text-amber-400 text-xs font-mono">{adminSettings.ifsc || "SBIN0020145"}</span>
+                  </div>
+                </div>
+
+                {adminSettings.upiVpa && (
+                  <div className="pt-2 flex items-center justify-between bg-slate-800/90 px-4 py-2 rounded-xl border border-slate-700/80 text-xs font-mono">
+                    <span>UPI ID: <strong className="text-amber-400">{adminSettings.upiVpa}</strong></span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(adminSettings.upiVpa);
+                        successToast("UPI ID copied!");
+                      }}
+                      className="text-blue-400 hover:text-blue-300 font-bold cursor-pointer"
+                    >
+                      Copy UPI ID
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1048,6 +1078,7 @@ export default function PaymentReport() {
         amount={form.amount}
         retailerId={currentUser._id}
         onPaymentSuccess={loadAll}
+        initialMethod={gatewayMethod}
       />
 
       {/* Admin Bank & QR Code Settings Modal */}
@@ -1113,12 +1144,18 @@ export default function PaymentReport() {
                   </label>
                   <input
                     type="text"
+                    list="admin-bank-list"
                     required
                     className="w-full border rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-slate-900 font-medium"
                     value={adminSettings.bankName || ""}
                     onChange={(e) => setAdminSettings({ ...adminSettings, bankName: e.target.value })}
-                    placeholder="e.g. State Bank of India"
+                    placeholder="Select or type Bank Name (e.g. State Bank of India)"
                   />
+                  <datalist id="admin-bank-list">
+                    {INDIAN_BANKS.map((b) => (
+                      <option key={b} value={b} />
+                    ))}
+                  </datalist>
                 </div>
 
                 <div>

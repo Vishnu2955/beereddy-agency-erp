@@ -9,12 +9,14 @@ const getPaymentSettings = async (req, res) => {
     if (!settings) {
       settings = await Settings.create({
         key: "payment_settings",
-        adminPayee: "B UPENDER REDDY",
-        upiVpa: "bupenderreddy@ybl",
+        adminPayee: "Beereddy Upendar Reddy",
+        upiVpa: "9876543210@ybl",
         bankName: "State Bank of India",
-        accountName: "B UPENDER REDDY (BEEREDDY AGENCY)",
+        accountName: "BEEREDDY UPENDAR REDDY (BEEREDDY AGENCY)",
         accountNumber: "40982341902",
         ifsc: "SBIN0020145",
+        branch: "Main Branch",
+        accountType: "Current",
         qrImage: "/admin_qr.jpg",
       });
     }
@@ -35,15 +37,24 @@ const getPaymentSettings = async (req, res) => {
 // Update Admin Payment & Bank Settings (Admin Only)
 const updatePaymentSettings = async (req, res) => {
   try {
-    const { adminPayee, upiVpa, bankName, accountName, accountNumber, ifsc } = req.body;
+    const { adminPayee, upiVpa, bankName, accountName, accountNumber, ifsc, branch, accountType, qrImage } = req.body;
 
     const updateData = {};
-    if (adminPayee !== undefined) updateData.adminPayee = adminPayee;
+    if (adminPayee !== undefined && adminPayee !== "") updateData.adminPayee = adminPayee;
+    if (accountName !== undefined && accountName !== "") {
+      updateData.accountName = accountName;
+      if (!updateData.adminPayee) updateData.adminPayee = accountName;
+    }
     if (upiVpa !== undefined) updateData.upiVpa = upiVpa;
     if (bankName !== undefined) updateData.bankName = bankName;
-    if (accountName !== undefined) updateData.accountName = accountName;
     if (accountNumber !== undefined) updateData.accountNumber = accountNumber;
     if (ifsc !== undefined) updateData.ifsc = ifsc;
+    if (branch !== undefined) updateData.branch = branch;
+    if (accountType !== undefined) updateData.accountType = accountType;
+
+    if (qrImage !== undefined && qrImage !== null && qrImage !== "") {
+      updateData.qrImage = qrImage;
+    }
 
     if (req.file) {
       updateData.qrImage = `/uploads/${req.file.filename}`;
@@ -52,8 +63,17 @@ const updatePaymentSettings = async (req, res) => {
     const settings = await Settings.findOneAndUpdate(
       { key: "payment_settings" },
       { $set: updateData },
-      { new: true, upsert: true }
+      { returnDocument: "after", upsert: true }
     );
+
+    console.log("⚡ [SETTINGS] Payment details updated in DB:", {
+      bankName: settings.bankName,
+      accountName: settings.accountName,
+      accountNumber: settings.accountNumber,
+      ifsc: settings.ifsc,
+      upiVpa: settings.upiVpa,
+      branch: settings.branch
+    });
 
     res.json({
       success: true,

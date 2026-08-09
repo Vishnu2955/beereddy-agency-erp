@@ -16,7 +16,7 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
   final _amountController = TextEditingController();
   final _refNumberController = TextEditingController();
   final _remarksController = TextEditingController();
-  String _paymentMode = 'UPI';
+  String _paymentMode = 'Official QR Code';
   File? _screenshotFile;
   bool _isSubmitting = false;
 
@@ -74,6 +74,45 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Card(
+                color: Colors.blue.shade50,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.blue.shade200),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(14.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.check_circle_rounded, color: Colors.blue.shade800, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Pay to: Beereddy Upendar Reddy',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade900,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Scan the QR code posted by Admin and pay to Beereddy Upendar Reddy. Enter your UTR Reference No. below. Once Admin (Beereddy Upendar Reddy) approves, your payment status will get succeeded.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue.shade900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _amountController,
                 keyboardType: TextInputType.number,
@@ -95,7 +134,7 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                   labelText: 'Payment Mode',
                   prefixIcon: Icon(Icons.payment_outlined),
                 ),
-                items: ['UPI', 'Bank Transfer', 'Cheque', 'Cash']
+                items: ['Official QR Code', 'Cash on Delivery']
                     .map((mode) => DropdownMenuItem(value: mode, child: Text(mode)))
                     .toList(),
                 onChanged: (val) {

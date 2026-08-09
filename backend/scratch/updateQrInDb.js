@@ -12,7 +12,13 @@ const updateQrSetting = async () => {
 
     await Settings.findOneAndUpdate(
       { key: "payment_settings" },
-      { $set: { qrImage: "/admin_qr.jpg" } },
+      {
+        $set: {
+          qrImage: "/admin_qr.jpg",
+          adminPayee: "Beereddy Upendar Reddy",
+          accountName: "Beereddy Upendar Reddy (BEEREDDY AGENCY)",
+        },
+      },
       { upsert: true, new: true }
     );
 
