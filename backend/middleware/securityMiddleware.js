@@ -77,8 +77,8 @@ const setSecurityHeaders = (req, res, next) => {
   // Prevent MIME type sniffing
   res.setHeader("X-Content-Type-Options", "nosniff");
 
-  // Prevent Frame Embedding & Clickjacking
-  res.setHeader("X-Frame-Options", "DENY");
+  // Prevent Frame Embedding & Clickjacking from 3rd-party sites (SAMEORIGIN allows internal frames like /mostar.html)
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
 
   // Enable Browser XSS Filtering
   res.setHeader("X-XSS-Protection", "1; mode=block");
@@ -95,7 +95,7 @@ const setSecurityHeaders = (req, res, next) => {
   // Content Security Policy (CSP)
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; img-src 'self' data: blob: https: http:; connect-src 'self' https: http: ws: wss:;"
+    "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:; img-src 'self' data: blob: https: http:; connect-src 'self' https: http: ws: wss:; frame-ancestors 'self';"
   );
 
   next();
