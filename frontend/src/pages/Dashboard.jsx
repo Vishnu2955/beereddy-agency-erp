@@ -25,6 +25,9 @@ import {
   FaPlus,
   FaFileDownload,
   FaDownload,
+  FaLayerGroup,
+  FaSyncAlt,
+  FaBoxes,
 } from "react-icons/fa";
 
 import SkeletonLoader from "../components/common/SkeletonLoader";
@@ -38,22 +41,25 @@ export default function Dashboard() {
 
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState({
+    todaySales: 0,
+    monthlySales: 0,
+    totalSales: 0,
     totalProducts: 0,
     totalRetailers: 0,
     totalOrders: 0,
     pendingOrders: 0,
     lowStockProducts: 0,
-    totalSales: 0,
     outstandingAmount: 0,
+    pendingPayments: 0,
   });
 
   const loadDashboard = async () => {
     try {
       const res = await api.get("/dashboard");
-      setDashboard(res.data.dashboard || {});
+      setDashboard(res.data?.dashboard || res.data || {});
     } catch (err) {
-      console.error(err);
-    } finally {
+      console.error("[Dashboard] Error loading dashboard stats:", err);
+    } fontFinally: {
       setLoading(false);
     }
   };
@@ -67,34 +73,42 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-44 bg-slate-900 rounded-3xl animate-pulse" />
+        <div className="h-44 bg-slate-900/90 rounded-3xl animate-pulse" />
         <SkeletonLoader type="stats" count={4} />
         <SkeletonLoader type="table" count={3} />
       </div>
     );
   }
 
+  // Safe Formatter Helpers
+  const formatCurrency = (amount) => {
+    const val = Number(amount) || 0;
+    return `₹${val.toLocaleString("en-IN")}`;
+  };
+
   // ===============================================
-  // RETAILER B2B PROCUREMENT DASHBOARD
+  // RETAILER PARTNER DASHBOARD
   // ===============================================
   if (isRetailer) {
     return (
       <div className="space-y-8">
         
-        {/* Retailer Hero Welcome Banner */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        {/* Soft Modern Welcome Banner */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="absolute -top-16 -right-16 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
           <div className="relative z-10 space-y-2">
             <div className="flex items-center gap-2">
-              <span className="bg-emerald-500/20 text-emerald-300 text-[11px] font-extrabold px-3 py-1 rounded-full border border-emerald-500/30 uppercase tracking-wider">
-                B2B Retailer Partner Portal
+              <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-500/30 uppercase tracking-widest">
+                Authorized Retailer Partner
               </span>
-              <span className="text-xs text-slate-400 font-medium">• Beereddy Agency</span>
+              <span className="text-xs text-slate-400 font-medium">• BEEREDDY AGENCY</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Welcome back, <span className="text-emerald-400">{currentUser?.shopName || currentUser?.fullName || "Valued Partner"}</span>
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Welcome, <span className="text-emerald-400">{currentUser?.shopName || currentUser?.fullName || "Valued Retailer"}</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-              Manage product inventory orders, monitor real-time order delivery status, review account invoices, and settle outstanding balances instantly.
+              Order genuine V-Bond tile adhesives, track active delivery dispatches, download GST invoices, and manage your account dues softly and securely.
             </p>
           </div>
 
@@ -102,44 +116,38 @@ export default function Dashboard() {
             {isInstallable && (
               <button
                 onClick={promptInstall}
-                className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2 hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+                className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-5 py-3 rounded-2xl shadow-lg transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer uppercase tracking-wider"
               >
                 <FaDownload /> Install App
               </button>
             )}
             <button
               onClick={() => navigate("/products")}
-              className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 hover:-translate-y-0.5"
+              className="flex-1 sm:flex-none bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-slate-950 font-black text-xs px-5 py-3 rounded-2xl shadow-lg transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer uppercase tracking-wider"
             >
               <FaShoppingBag /> Place New Order
-            </button>
-            <button
-              onClick={() => navigate("/payments")}
-              className="flex-1 sm:flex-none bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-bold px-5 py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 hover:-translate-y-0.5"
-            >
-              <FaCreditCard /> Pay Dues Online
             </button>
           </div>
         </div>
 
-        {/* Retailer KPI Metrics */}
+        {/* Retailer Key Metrics */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="My Orders Placed"
-            value={dashboard.totalOrders}
+            title="Total Orders"
+            value={dashboard.totalOrders || 0}
             icon={<FaClipboardList />}
-            trend="+100% Active"
+            trend="Active Network"
             trendUp={true}
             color="from-blue-600 to-indigo-700"
-            subtitle="Total registered orders"
+            subtitle="Registered purchase orders"
             onClick={() => navigate("/orders")}
           />
 
           <StatCard
             title="Pending & In-Transit"
-            value={dashboard.pendingOrders}
+            value={dashboard.pendingOrders || 0}
             icon={<FaClock />}
-            trend={dashboard.pendingOrders > 0 ? "Requires tracking" : "All cleared"}
+            trend={dashboard.pendingOrders > 0 ? "Dispatch Active" : "All Delivered"}
             trendUp={dashboard.pendingOrders === 0}
             color="from-amber-500 to-orange-600"
             subtitle="Orders processing"
@@ -148,82 +156,82 @@ export default function Dashboard() {
 
           <StatCard
             title="Total Purchase Value"
-            value={`₹${(dashboard.totalSales || 0).toLocaleString("en-IN")}`}
+            value={formatCurrency(dashboard.totalSales)}
             icon={<FaMoneyBillWave />}
-            trend="+15.8% YTD"
+            trend="Gross Volume"
             trendUp={true}
             color="from-emerald-600 to-teal-700"
-            subtitle="Gross order volume"
+            subtitle="Fulfilled orders value"
             onClick={() => navigate("/orders")}
           />
 
           <StatCard
             title="Outstanding Dues"
-            value={`₹${(dashboard.outstandingAmount || 0).toLocaleString("en-IN")}`}
+            value={formatCurrency(dashboard.outstandingAmount)}
             icon={<FaExclamationTriangle />}
-            trend={dashboard.outstandingAmount > 0 ? "Payment Due" : "Clear Account"}
+            trend={dashboard.outstandingAmount > 0 ? "Due Clear Needed" : "Account Clear"}
             trendUp={dashboard.outstandingAmount === 0}
             color="from-rose-600 to-red-700"
-            subtitle="Current payable balance"
+            subtitle="Current balance payable"
             onClick={() => navigate("/payments")}
           />
         </div>
 
-        {/* Quick Navigation Cards Hub */}
-        <div className="dynamic-card-3d bg-white p-6 rounded-3xl shadow-md border border-slate-200/90 space-y-4">
+        {/* Quick Operational Shortcuts Hub */}
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-black text-slate-900 uppercase tracking-wider">Retailer Operations Hub</h2>
-            <span className="text-xs text-slate-600 font-black">Quick Shortcuts</span>
+            <h2 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Retailer Operations Hub</h2>
+            <span className="text-xs text-slate-500 font-semibold">1-Tap Shortcuts</span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button
               onClick={() => navigate("/products")}
-              className="p-5 rounded-2xl bg-blue-50/70 hover:bg-blue-100/80 border border-blue-100/90 text-blue-900 transition flex flex-col items-center text-center space-y-2 group cursor-pointer"
+              className="p-5 rounded-2xl bg-blue-50/60 hover:bg-blue-100/70 border border-blue-100 text-blue-900 transition flex flex-col items-center text-center space-y-2 group cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-110 transition-transform">
+              <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg shadow-sm group-hover:scale-105 transition-transform">
                 <FaBoxOpen />
               </div>
-              <span className="font-extrabold text-xs text-slate-800">Browse Catalog</span>
-              <span className="text-[11px] text-blue-600 font-medium">Order items & 3D view</span>
+              <span className="font-extrabold text-xs text-slate-800">Order Catalog</span>
+              <span className="text-[10px] text-blue-600 font-medium">Browse V-Bond products</span>
             </button>
 
             <button
               onClick={() => navigate("/orders")}
-              className="p-5 rounded-2xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-100/90 text-amber-900 transition flex flex-col items-center text-center space-y-2 group cursor-pointer"
+              className="p-5 rounded-2xl bg-amber-50/60 hover:bg-amber-100/70 border border-amber-100 text-amber-900 transition flex flex-col items-center text-center space-y-2 group cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-xl bg-amber-600 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-110 transition-transform">
+              <div className="w-11 h-11 rounded-xl bg-amber-600 text-white flex items-center justify-center text-lg shadow-sm group-hover:scale-105 transition-transform">
                 <FaClipboardList />
               </div>
-              <span className="font-extrabold text-xs text-slate-800">My Orders</span>
-              <span className="text-[11px] text-amber-600 font-medium">Track delivery progress</span>
+              <span className="font-extrabold text-xs text-slate-800">Order History</span>
+              <span className="text-[10px] text-amber-600 font-medium">Track delivery status</span>
             </button>
 
             <button
               onClick={() => navigate("/invoices")}
-              className="p-5 rounded-2xl bg-purple-50/70 hover:bg-purple-100/80 border border-purple-100/90 text-purple-900 transition flex flex-col items-center text-center space-y-2 group cursor-pointer"
+              className="p-5 rounded-2xl bg-purple-50/60 hover:bg-purple-100/70 border border-purple-100 text-purple-900 transition flex flex-col items-center text-center space-y-2 group cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-xl bg-purple-600 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-110 transition-transform">
+              <div className="w-11 h-11 rounded-xl bg-purple-600 text-white flex items-center justify-center text-lg shadow-sm group-hover:scale-105 transition-transform">
                 <FaFileInvoice />
               </div>
-              <span className="font-extrabold text-xs text-slate-800">Invoices & PDF</span>
-              <span className="text-[11px] text-purple-600 font-medium">Download tax invoices</span>
+              <span className="font-extrabold text-xs text-slate-800">GST Invoices</span>
+              <span className="text-[10px] text-purple-600 font-medium">Download tax bills</span>
             </button>
 
             <button
               onClick={() => navigate("/payments")}
-              className="p-5 rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-100/90 text-emerald-900 transition flex flex-col items-center text-center space-y-2 group cursor-pointer"
+              className="p-5 rounded-2xl bg-emerald-50/60 hover:bg-emerald-100/70 border border-emerald-100 text-emerald-900 transition flex flex-col items-center text-center space-y-2 group cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-110 transition-transform">
+              <div className="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm group-hover:scale-105 transition-transform">
                 <FaCreditCard />
               </div>
-              <span className="font-extrabold text-xs text-slate-800">Payment Gateway</span>
-              <span className="text-[11px] text-emerald-600 font-medium">Pay via UPI & Cards</span>
+              <span className="font-extrabold text-xs text-slate-800">Pay Online</span>
+              <span className="text-[10px] text-emerald-600 font-medium">Clear dues via UPI/Cards</span>
             </button>
           </div>
         </div>
 
-        {/* Order Status Chart & Recent Orders */}
+        {/* Charts & Order Status */}
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
             <OrderStatusChart />
@@ -244,32 +252,34 @@ export default function Dashboard() {
     <div className="space-y-8">
 
       {/* Admin Executive Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="absolute -top-16 -right-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
         <div className="relative z-10 space-y-2">
           <div className="flex items-center gap-2">
-            <span className="bg-indigo-500/20 text-indigo-300 text-[11px] font-extrabold px-3 py-1 rounded-full border border-indigo-500/30 uppercase tracking-wider">
-              Central Distributor Executive Suite
+            <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-black px-3 py-1 rounded-full border border-indigo-500/30 uppercase tracking-widest">
+              Executive Distributor Command Suite
             </span>
-            <span className="text-xs text-slate-400 font-medium">• V Bond Agency</span>
+            <span className="text-xs text-slate-400 font-medium">• BEEREDDY AGENCY</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Distributor <span className="text-indigo-400">Control Center</span>
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Distributor <span className="text-amber-400">Control Center</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-            Overview of total distribution revenue, inventory stock levels, active retailer partners, and pending fulfillment orders across the network.
+            Monitor real-time network sales turnover, stock inventory reorder alerts, retailer accounts, and pending order dispatches softly and efficiently.
           </p>
         </div>
 
         <div className="relative z-10 flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <button
             onClick={() => navigate("/products")}
-            className="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-lg shadow-indigo-600/20 transition flex items-center justify-center gap-2 hover:-translate-y-0.5"
+            className="flex-1 sm:flex-none bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black px-5 py-3 rounded-2xl shadow-lg transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer uppercase tracking-wider"
           >
-            <FaPlus /> Add New Product
+            <FaPlus /> Add Product
           </button>
           <button
             onClick={() => navigate("/reports")}
-            className="flex-1 sm:flex-none bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-bold px-5 py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 hover:-translate-y-0.5"
+            className="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 text-xs font-extrabold px-5 py-3 rounded-2xl shadow-md transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
           >
             <FaFileDownload /> Export Report
           </button>
@@ -280,18 +290,18 @@ export default function Dashboard() {
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Today's Sales"
-          value={`₹${(dashboard.todaySales || 0).toLocaleString("en-IN")}`}
+          value={formatCurrency(dashboard.todaySales)}
           icon={<FaMoneyBillWave />}
           trend={dashboard.todaySales > 0 ? "Daily Active" : "₹0 Today"}
           trendUp={dashboard.todaySales > 0}
           color="from-blue-600 to-indigo-700"
-          subtitle="Orders placed today"
+          subtitle="Orders recorded today"
           onClick={() => navigate("/orders")}
         />
 
         <StatCard
           title="Monthly Sales"
-          value={`₹${(dashboard.monthlySales || 0).toLocaleString("en-IN")}`}
+          value={formatCurrency(dashboard.monthlySales)}
           icon={<FaChartLine />}
           trend={dashboard.monthlySales > 0 ? "Month Active" : "₹0 Month"}
           trendUp={dashboard.monthlySales > 0}
@@ -302,12 +312,12 @@ export default function Dashboard() {
 
         <StatCard
           title="Outstanding Credit"
-          value={`₹${(dashboard.outstandingAmount || 0).toLocaleString("en-IN")}`}
+          value={formatCurrency(dashboard.outstandingAmount)}
           icon={<FaExclamationTriangle />}
-          trend={dashboard.outstandingAmount > 0 ? "Collection Due" : "Clean Account"}
+          trend={dashboard.outstandingAmount > 0 ? "Due Outstanding" : "Clean Dues"}
           trendUp={dashboard.outstandingAmount === 0}
           color="from-rose-600 to-red-700"
-          subtitle="Total unpaid dues"
+          subtitle="Total pending dues"
           onClick={() => navigate("/outstanding")}
         />
 
@@ -315,7 +325,7 @@ export default function Dashboard() {
           title="Pending Payments"
           value={dashboard.pendingPayments || 0}
           icon={<FaClock />}
-          trend={dashboard.pendingPayments > 0 ? "Action Needed" : "Zero Pending"}
+          trend={dashboard.pendingPayments > 0 ? "Action Required" : "Zero Pending"}
           trendUp={dashboard.pendingPayments === 0}
           color="from-amber-500 to-orange-600"
           subtitle="Unsettled invoices"
@@ -326,21 +336,21 @@ export default function Dashboard() {
           title="Catalog Products"
           value={dashboard.totalProducts || 0}
           icon={<FaBoxOpen />}
-          trend={dashboard.totalProducts > 0 ? `+${dashboard.totalProducts} Items` : "No Items"}
+          trend={dashboard.totalProducts > 0 ? `+${dashboard.totalProducts} Listed` : "Empty Catalog"}
           trendUp={dashboard.totalProducts > 0}
           color="from-emerald-600 to-teal-700"
-          subtitle="Listed in catalog"
+          subtitle="Active catalog items"
           onClick={() => navigate("/products")}
         />
 
         <StatCard
-          title="Total Retailers"
+          title="Retailer Partners"
           value={dashboard.totalRetailers || 0}
           icon={<FaStore />}
-          trend={dashboard.totalRetailers > 0 ? `+${dashboard.totalRetailers} Partners` : "No Partners"}
+          trend={dashboard.totalRetailers > 0 ? `+${dashboard.totalRetailers} Verified` : "No Retailers"}
           trendUp={dashboard.totalRetailers > 0}
           color="from-cyan-600 to-blue-700"
-          subtitle="Verified network accounts"
+          subtitle="Authorized network buyers"
           onClick={() => navigate("/retailers")}
         />
 
@@ -351,7 +361,7 @@ export default function Dashboard() {
           trend="Registered Base"
           trendUp={true}
           color="from-violet-600 to-indigo-800"
-          subtitle="Registered buyer accounts"
+          subtitle="Registered customer base"
           onClick={() => navigate("/retailers")}
         />
 
@@ -359,10 +369,10 @@ export default function Dashboard() {
           title="Low Stock Alerts"
           value={dashboard.lowStockProducts || 0}
           icon={<FaExclamationTriangle />}
-          trend={dashboard.lowStockProducts > 0 ? "Restock Needed" : "Optimal Stock"}
+          trend={dashboard.lowStockProducts > 0 ? "Reorder Limit" : "Optimal Stock"}
           trendUp={dashboard.lowStockProducts === 0}
           color="from-rose-600 to-red-700"
-          subtitle="Below reorder limit"
+          subtitle="Items below safety limit"
           onClick={() => navigate("/inventory")}
         />
       </div>

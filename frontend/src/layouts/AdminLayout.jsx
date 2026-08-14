@@ -4,7 +4,6 @@ import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import MobileBottomNav from "../components/common/MobileBottomNav";
-import InstallPWAPrompt from "../components/common/InstallPWAPrompt";
 import GlobalSearchModal from "../components/common/GlobalSearchModal";
 import FloatingActionButton from "../components/common/FloatingActionButton";
 
@@ -91,9 +90,8 @@ export default function AdminLayout() {
       {/* Dynamic Live Floating Popup Notifications Manager */}
       <NotificationPopupManager />
 
-      {/* PWA Mobile Bottom Navigation Bar & Installation Banner */}
+      {/* PWA Mobile Bottom Navigation Bar */}
       <MobileBottomNav />
-      <InstallPWAPrompt />
     </div>
   );
 }

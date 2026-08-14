@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      select: false,
     },
 
     tokenVersion: {
@@ -67,6 +68,7 @@ const userSchema = new mongoose.Schema(
     otp: {
       type: String,
       default: null,
+      select: false,
     },
 
     otpExpires: {

@@ -1,13 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { FaSyncAlt, FaTimes } from "react-icons/fa";
+import { FaSyncAlt } from "react-icons/fa";
+import { successToast, infoToast } from "../utils/toast";
 
 const PwaContext = createContext();
 
 export function PwaProvider({ children }) {
+
+
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   // New Version Available PWA States
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -21,21 +26,48 @@ export function PwaProvider({ children }) {
       window.navigator.standalone === true ||
       document.referrer.includes("android-app://");
 
+    // Detect iOS Safari
+    const iosDevice =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    setIsIOS(iosDevice);
+
     if (isStandalone) {
       setIsInstalled(true);
       setIsInstallable(false);
+      setShowInstallBanner(false);
+    } else {
+      // Auto suggest installation when opening website if not dismissed recently in session
+      const dismissedInSession = sessionStorage.getItem("pwa_prompt_dismissed_session");
+      if (!dismissedInSession) {
+        // Slight delay so app loads smoothly first
+        const timer = setTimeout(() => {
+          setShowInstallBanner(true);
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
+    }
+
+    // Check if early prompt event was already captured on window
+    if (window.deferredPwaPrompt) {
+      setDeferredPrompt(window.deferredPwaPrompt);
+      setIsInstallable(true);
     }
 
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
+      window.deferredPwaPrompt = e;
       setDeferredPrompt(e);
       setIsInstallable(true);
+      if (!isStandalone && !sessionStorage.getItem("pwa_prompt_dismissed_session")) {
+        setShowInstallBanner(true);
+      }
     };
 
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
+      setShowInstallBanner(false);
       console.log("🎉 Beereddy Agency ERP PWA successfully installed!");
     };
 
@@ -79,12 +111,12 @@ export function PwaProvider({ children }) {
 
       const checkForUpdate = () => {
         if (currentReg) {
-          currentReg.update().catch(() => {});
+          currentReg.update().catch(() => { });
         } else {
           navigator.serviceWorker.getRegistration().then((reg) => {
             if (reg) {
               currentReg = reg;
-              reg.update().catch(() => {});
+              reg.update().catch(() => { });
             }
           });
         }
@@ -146,14 +178,39 @@ export function PwaProvider({ children }) {
   }, []);
 
   const promptInstall = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") {
-        setIsInstalled(true);
-        setIsInstallable(false);
+    setShowGuideModal(false);
+    const targetPrompt = deferredPrompt || window.deferredPwaPrompt;
+    if (targetPrompt) {
+      try {
+        targetPrompt.prompt();
+        const { outcome } = await targetPrompt.userChoice;
+        if (outcome === "accepted") {
+          setIsInstalled(true);
+          setIsInstallable(false);
+          setShowInstallBanner(false);
+          successToast("🎉 Beereddy Agency ERP App installed successfully!");
+        }
+        setDeferredPrompt(null);
+        window.deferredPwaPrompt = null;
+      } catch (err) {
+        successToast("📲 Triggering App Installation...");
       }
-      setDeferredPrompt(null);
+    } else if (isInstalled) {
+      infoToast("🚀 Beereddy Agency ERP App is already installed on your device!");
+      setShowInstallBanner(false);
+    } else {
+      successToast("📲 Triggering App Installation...");
+    }
+  };
+
+  const dismissInstallBanner = () => {
+    setShowInstallBanner(false);
+    sessionStorage.setItem("pwa_prompt_dismissed_session", "true");
+  };
+
+  const triggerShowInstallModal = () => {
+    if (deferredPrompt) {
+      promptInstall();
     } else {
       setShowGuideModal(true);
     }
@@ -192,9 +249,15 @@ export function PwaProvider({ children }) {
   return (
     <PwaContext.Provider
       value={{
-        isInstallable: isInstallable && !isInstalled,
+        deferredPrompt,
+        isInstallable: isInstallable || !!deferredPrompt,
         isInstalled,
+        isIOS,
+        showInstallBanner,
+        setShowInstallBanner,
+        dismissInstallBanner,
         promptInstall,
+        triggerShowInstallModal,
         showGuideModal,
         setShowGuideModal,
         updateAvailable,
@@ -246,41 +309,6 @@ export function PwaProvider({ children }) {
           </div>
         </div>
       )}
-
-      {/* PWA Mobile Installation Guide Modal */}
-      {showGuideModal && (
-        <div className="fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95">
-            <div className="w-16 h-16 bg-emerald-50 rounded-2xl mx-auto flex items-center justify-center border border-emerald-200 text-3xl shadow-inner">
-              📲
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-slate-800 tracking-tight">Install Beereddy Agency ERP</h3>
-              <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
-                Install our official Web APK app on your device for instant access and live updates!
-              </p>
-            </div>
-
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-left space-y-2.5 text-xs font-semibold text-slate-700">
-              <div className="flex items-center gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
-                <span>Tap Browser Menu <strong>(⋮)</strong> or Share Icon <strong>(⎋)</strong></span>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">2</span>
-                <span>Select <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong></span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowGuideModal(false)}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs py-3.5 rounded-2xl shadow-lg shadow-emerald-900/20 transition active:scale-95 cursor-pointer"
-            >
-              Got It
-            </button>
-          </div>
-        </div>
-      )}
     </PwaContext.Provider>
   );
 }
@@ -288,4 +316,5 @@ export function PwaProvider({ children }) {
 export function usePwa() {
   return useContext(PwaContext);
 }
+
 

@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Retailers from "./pages/Retailers";
 import Orders from "./pages/Orders";
@@ -32,6 +33,7 @@ import BackupRestore from "./pages/BackupRestore";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminLayout from "./layouts/AdminLayout";
+import InstallPWAPrompt from "./components/common/InstallPWAPrompt";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -45,6 +47,7 @@ function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <InstallPWAPrompt />
       <Routes>
 
         {/* Auth Routes */}
@@ -58,6 +61,7 @@ function App() {
         {/* Protected ERP Routes */}
         <Route element={<ProtectedRoute />}> 
           <Route element={<AdminLayout />}> 
+            <Route path="/home" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/products" element={<Products />} />
             <Route path="/categories" element={<Categories />} />

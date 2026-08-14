@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaShieldAlt,
@@ -12,14 +12,21 @@ import {
 } from "react-icons/fa";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { getToken } from "../utils/auth";
 import { successToast, errorToast } from "../utils/toast";
 import VbondTruck3D from "../components/common/VbondTruck3D";
 import { usePwa } from "../context/PwaContext";
 
 function Login() {
   const navigate = useNavigate();
-  const { login: authLogin } = useAuth();
-  const { isInstallable, promptInstall } = usePwa();
+  const { login: authLogin, token: contextToken } = useAuth();
+  const { isInstalled, promptInstall } = usePwa();
+
+  useEffect(() => {
+    if (contextToken || getToken()) {
+      navigate("/home", { replace: true });
+    }
+  }, [contextToken, navigate]);
 
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
@@ -43,7 +50,7 @@ function Login() {
         const { token, user } = res.data;
         authLogin(token, user);
         successToast("Signed in successfully!");
-        navigate("/dashboard", { replace: true });
+        navigate("/home", { replace: true });
       } else {
         errorToast(res.data?.message || "Login failed. Please check credentials.");
       }
@@ -125,10 +132,44 @@ function Login() {
 
             {/* Right Panel: Sleek Form Controls (Dragged from Right to Center) */}
             <div className="form-panel-custom">
-              <div className="mb-6">
+              <div className="mb-4">
                 <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">Official Portal</p>
                 <h3 className="text-2xl font-black text-slate-800 tracking-tight">Portal Login</h3>
                 <p className="text-xs text-slate-500 mt-1">Sign in with your registered mobile number or email</p>
+              </div>
+
+              {/* Prominent PWA Add to Home Screen / Install App Card */}
+              <div className="mb-5 bg-gradient-to-br from-slate-900 to-slate-950 text-white p-4 rounded-2xl border border-amber-500/40 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-xl pointer-events-none" />
+                <div className="flex items-center justify-between gap-3 relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 p-0.5 shadow-md shrink-0">
+                      <div className="w-full h-full bg-slate-950 rounded-[10px] p-1 flex items-center justify-center">
+                        <img src="/icon-192.png" alt="Beereddy ERP" className="w-full h-full object-contain" />
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30">
+                        Official Mobile App
+                      </span>
+                      <h4 className="text-xs font-black text-white tracking-tight mt-0.5">
+                        Install Beereddy ERP App
+                      </h4>
+                      <p className="text-[10px] text-slate-300 font-medium">
+                        Add to Home Screen for 1-tap offline access
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={promptInstall}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md shadow-emerald-900/30 flex items-center gap-1.5 transition active:scale-95 border border-emerald-300/30 shrink-0 cursor-pointer uppercase tracking-wider"
+                  >
+                    <FaDownload className="text-xs" />
+                    <span>Install</span>
+                  </button>
+                </div>
               </div>
 
               <form onSubmit={loginUser} className="space-y-4">

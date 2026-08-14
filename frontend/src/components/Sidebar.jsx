@@ -20,15 +20,18 @@ import {
   FaBuilding,
   FaDatabase,
   FaLayerGroup,
+  FaDownload,
 } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getUser, logout } from "../utils/auth";
+import { usePwa } from "../context/PwaContext";
 
 const menuGroups = [
   {
     title: "OVERVIEW",
     items: [
-      { name: "Dashboard", path: "/dashboard", icon: <FaHome /> },
+      { name: "Home", path: "/home", icon: <FaHome /> },
+      { name: "Dashboard", path: "/dashboard", icon: <FaChartBar /> },
     ],
   },
   {
@@ -70,6 +73,7 @@ const menuGroups = [
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { promptInstall, isInstalled } = usePwa();
   const user = getUser();
   const role = user?.role || "admin";
   const isRetailer = role === "retailer";
@@ -189,9 +193,19 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             </div>
           </div>
 
+          {!isInstalled && (
+            <button
+              onClick={promptInstall}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white py-2.5 rounded-xl transition text-xs font-bold shadow-lg shadow-amber-500/20 active:scale-95 cursor-pointer uppercase tracking-wider"
+            >
+              <FaDownload className="text-xs" />
+              Install Mobile App
+            </button>
+          )}
+
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-slate-800/80 hover:bg-red-600/20 hover:text-red-400 text-slate-300 hover:border-red-500/30 border border-slate-700/60 py-2.5 rounded-xl transition text-xs font-semibold"
+            className="w-full flex items-center justify-center gap-2 bg-slate-800/80 hover:bg-red-600/20 hover:text-red-400 text-slate-300 hover:border-red-500/30 border border-slate-700/60 py-2.5 rounded-xl transition text-xs font-semibold cursor-pointer"
           >
             <FaSignOutAlt className="text-sm" />
             Sign Out

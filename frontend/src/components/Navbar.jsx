@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaBars, FaBell, FaSearch, FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaSignOutAlt } from "react-icons/fa";
+import { FaBars, FaBell, FaSearch, FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaSignOutAlt, FaDownload, FaSyncAlt } from "react-icons/fa";
 import { getUser, logout } from "../utils/auth";
 import { successToast } from "../utils/toast";
 import api from "../services/api";
 import { usePwa } from "../context/PwaContext";
-import { FaSyncAlt } from "react-icons/fa";
 
 export default function Navbar({
   sidebarOpen,
@@ -13,7 +12,7 @@ export default function Navbar({
   onOpenSearch,
 }) {
   const navigate = useNavigate();
-  const { applyUpdate, updateAvailable } = usePwa();
+  const { applyUpdate, updateAvailable, promptInstall, isInstalled } = usePwa();
   const user = getUser();
   const role = user?.role || "admin";
   const isRetailer = role === "retailer";
@@ -143,6 +142,18 @@ export default function Navbar({
             ⌘K
           </kbd>
         </button>
+
+        {/* Install PWA App Button */}
+        {!isInstalled && (
+          <button
+            onClick={promptInstall}
+            className="px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition shadow-sm cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/30 active:scale-95"
+            title="Install Beereddy ERP App to your device"
+          >
+            <FaDownload className="text-xs" />
+            <span className="hidden sm:inline">Install App</span>
+          </button>
+        )}
 
         {/* Manual App Update Button */}
         <button

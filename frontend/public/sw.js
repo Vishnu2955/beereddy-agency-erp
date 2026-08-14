@@ -72,14 +72,13 @@ self.addEventListener("fetch", (event) => {
   // Ignore non-GET requests
   if (request.method !== "GET") return;
 
-  // Bypass Service Worker for Vite dev modules, node_modules, HMR, and localhost dev server
+  // Bypass Service Worker for Vite dev modules, node_modules, HMR
   if (
     url.pathname.includes("/node_modules/") ||
     url.pathname.includes("/@vite") ||
     url.pathname.includes("/@react-refresh") ||
-    url.search.includes("v=") ||
-    url.hostname === "localhost" ||
-    url.hostname === "127.0.0.1"
+    url.pathname.includes("/src/") ||
+    url.search.includes("v=")
   ) {
     return;
   }

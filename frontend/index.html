@@ -15,7 +15,7 @@
     <meta name="description" content="Beereddy Agency ERP - Executive Distributor & Retailer Command Center for V Bond Tile Adhesives" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="manifest" href="/manifest.json" />
     <title>Beereddy Agency ERP | Enterprise Distributor & Retailer Portal</title>
   </head>
@@ -56,57 +56,43 @@
         }, 300);
       });
 
+      // Global Early PWA Install Prompt Handler
+      window.deferredPwaPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        window.deferredPwaPrompt = e;
+        console.log('📲 Early beforeinstallprompt event captured on window!');
+      });
+
       // PWA Service Worker Registration with Automatic Update Refresh
       if ('serviceWorker' in navigator) {
-        const isLocalhost = Boolean(
-          window.location.hostname === 'localhost' ||
-          window.location.hostname === '[::1]' ||
-          window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
-        );
-
-        if (isLocalhost) {
-          // Unregister SW and purge stale CacheStorage on localhost to prevent dev cache collisions
-          if ('caches' in window) {
-            caches.keys().then((names) => {
-              for (let name of names) {
-                caches.delete(name);
-              }
-            });
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            console.log("⚡ New Service Worker activated. Reloading page for updated content...");
+            window.location.reload();
           }
-          navigator.serviceWorker.getRegistrations().then((registrations) => {
-            for (let reg of registrations) {
-              reg.unregister();
-            }
-          });
-        } else {
-          let refreshing = false;
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-              refreshing = true;
-              console.log("⚡ New Service Worker activated. Reloading page for updated content...");
-              window.location.reload();
-            }
-          });
+        });
 
-          window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-              .then((reg) => {
-                console.log('✅ PWA Service Worker registered:', reg.scope);
-                reg.onupdatefound = () => {
-                  const installingWorker = reg.installing;
-                  if (installingWorker) {
-                    installingWorker.onstatechange = () => {
-                      if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        console.log('🔄 New version detected! Triggering skipWaiting...');
-                        installingWorker.postMessage({ type: 'SKIP_WAITING' });
-                      }
-                    };
-                  }
-                };
-              })
-              .catch((err) => console.warn('Service Worker registration error:', err));
-          });
-        }
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((reg) => {
+              console.log('✅ PWA Service Worker registered:', reg.scope);
+              reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                if (installingWorker) {
+                  installingWorker.onstatechange = () => {
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      console.log('🔄 New version detected! Triggering skipWaiting...');
+                      installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                  };
+                }
+              };
+            })
+            .catch((err) => console.warn('Service Worker registration error:', err));
+        });
       }
     </script>
   </body>

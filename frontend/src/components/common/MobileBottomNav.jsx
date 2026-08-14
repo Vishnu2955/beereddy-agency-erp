@@ -1,16 +1,16 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaHome, FaBoxOpen, FaShoppingCart, FaCreditCard, FaUser, FaSyncAlt } from "react-icons/fa";
+import { FaHome, FaBoxOpen, FaShoppingCart, FaCreditCard, FaUser, FaSyncAlt, FaDownload } from "react-icons/fa";
 import { usePwa } from "../../context/PwaContext";
 import { successToast } from "../../utils/toast";
 
 export default function MobileBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { applyUpdate, updateAvailable } = usePwa();
+  const { applyUpdate, updateAvailable, promptInstall, isInstalled } = usePwa();
 
   const navItems = [
-    { name: "Home", path: "/dashboard", icon: <FaHome className="text-lg" /> },
+    { name: "Home", path: "/home", icon: <FaHome className="text-lg" /> },
     { name: "Products", path: "/products", icon: <FaBoxOpen className="text-lg" /> },
     { name: "Orders", path: "/orders", icon: <FaShoppingCart className="text-lg" /> },
     { name: "Payments", path: "/payments", icon: <FaCreditCard className="text-lg" /> },
@@ -42,6 +42,18 @@ export default function MobileBottomNav() {
             </button>
           );
         })}
+
+        {/* Mobile Install App Button */}
+        {!isInstalled && (
+          <button
+            onClick={promptInstall}
+            className="relative flex flex-col items-center justify-center py-1.5 px-2 min-h-[48px] rounded-2xl transition-all duration-150 touch-manipulation active:scale-95 cursor-pointer text-emerald-400 font-black"
+            title="Install App"
+          >
+            <FaDownload className="text-base text-emerald-400 animate-bounce" />
+            <span className="text-[9px] tracking-tight mt-0.5 z-10 font-black uppercase">Install</span>
+          </button>
+        )}
 
         {/* Dedicated Mobile Update App Button */}
         <button

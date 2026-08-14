@@ -48,8 +48,8 @@ const systemRoutes = require("./routes/systemRoutes");
 const diagnosticsRoutes = require("./routes/diagnosticsRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 
-// Custom Middleware
-const { setSecurityHeaders, sanitizeInput } = require("./middleware/securityMiddleware");
+// Custom Security Middleware
+const { setSecurityHeaders, sanitizeInput, apiRateLimiter } = require("./middleware/securityMiddleware");
 const { maintenanceMiddleware } = require("./middleware/maintenanceMiddleware");
 const { startBackupScheduler } = require("./utils/backupScheduler");
 const { performanceLogger } = require("./middleware/performanceLogger");
@@ -76,6 +76,24 @@ app.use(performanceLogger);
 app.use(sanitizeInput);
 app.use(maintenanceMiddleware);
 
+// Block Path Traversal & Dotfile Probing Attempts (.env, .git, .db, backups)
+app.use((req, res, next) => {
+  const url = req.originalUrl || req.url;
+  if (
+    url.includes("/.") ||
+    url.includes("..") ||
+    url.includes(".env") ||
+    url.includes(".git") ||
+    url.includes("/backups/")
+  ) {
+    return res.status(403).json({
+      success: false,
+      message: "Access Denied. Forbidden system resource path.",
+    });
+  }
+  next();
+});
+
 // Production-ready CORS Configuration
 const allowedOrigins = [
   process.env.CORS_ORIGIN,
@@ -90,7 +108,6 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
 
     const validOrigins = allowedOrigins.flatMap((o) => o.split(",").map((s) => s.trim()));
@@ -111,8 +128,11 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+
+// Rate Limit General API Requests
+app.use("/api", apiRateLimiter);
 
 // Serve Uploads using absolute path
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -152,7 +172,7 @@ app.get("/icon-512.png", serveStaticFile("icon-512.png", "image/png"));
 app.get("/favicon.ico", serveStaticFile("favicon.ico"));
 app.get("/favicon.svg", serveStaticFile("favicon.svg", "image/svg+xml"));
 
-// API Health Check Routes (Must always work and return clean JSON)
+// API Health Check Routes
 app.get("/health", (req, res) => {
   const dbStatus = mongoose.connection && mongoose.connection.readyState === 1 ? "CONNECTED" : "DISCONNECTED";
   res.status(200).json({
@@ -160,7 +180,6 @@ app.get("/health", (req, res) => {
     service: "Beereddy Agency ERP Backend API",
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor(process.uptime()),
-    memoryUsage: process.memoryUsage(),
     database: dbStatus,
     frontendDetected: isFrontendDetected,
   });
@@ -214,7 +233,7 @@ app.use("/api/system", systemRoutes);
 app.use("/api/diagnostics", diagnosticsRoutes);
 app.use("/api/categories", categoryRoutes);
 
-// Global Centralized Error Catcher & Bug Reporting Middleware
+// Global Centralized Error Catcher
 app.use(async (err, req, res, next) => {
   console.error("🔥 Global System Error Captured:", err.message);
 
@@ -236,7 +255,7 @@ app.use(async (err, req, res, next) => {
   });
 });
 
-// Explicit Zero-Cache Route Handler for Service Worker and Manifest
+// Explicit Zero-Cache Route Handler for Service Worker
 app.get("/sw.js", (req, res) => {
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.setHeader("Pragma", "no-cache");
@@ -249,7 +268,7 @@ app.get("/sw.js", (req, res) => {
   return res.status(404).send("// SW not found");
 });
 
-// Catch-all SPA Handler for non-API routes with zero-cache for index.html
+// Catch-all SPA Handler
 app.get("*splat", (req, res) => {
   if (req.path.startsWith("/api")) {
     return res.status(404).json({
@@ -274,6 +293,7 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log("==========================================");
+  console.log("🛡️ Hardened Production Security Active!");
   console.log("🚀 Server started successfully!");
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "production"}`);
   console.log(`🔌 Port: ${PORT}`);

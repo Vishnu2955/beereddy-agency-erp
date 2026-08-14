@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const { verifyToken } = require("../middleware/authMiddleware");
+const { loginRateLimiter } = require("../middleware/securityMiddleware");
 const {
   registerUser,
   loginUser,
@@ -12,12 +13,13 @@ const {
   getThemePreferences,
 } = require("../controllers/authController");
 
-router.post("/register", registerUser);
-router.post("/login", loginUser);
+// Protected against Brute-Force Password Dictionary Attacks
+router.post("/register", loginRateLimiter, registerUser);
+router.post("/login", loginRateLimiter, loginUser);
 
-router.post("/send-otp", sendOtp);
-router.post("/verify-otp", verifyOtp);
-router.post("/reset-password", resetPassword);
+router.post("/send-otp", loginRateLimiter, sendOtp);
+router.post("/verify-otp", loginRateLimiter, verifyOtp);
+router.post("/reset-password", loginRateLimiter, resetPassword);
 
 router.get("/theme", verifyToken, getThemePreferences);
 router.put("/theme", verifyToken, updateThemePreferences);
